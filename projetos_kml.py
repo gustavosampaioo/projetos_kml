@@ -179,13 +179,13 @@ def criar_dashboard_gpon(dados_gpon):
         # Extrai o nome da GPON e da subpasta selecionada
         gpon_selecionada, subpasta_nome = subpasta_selecionada.split(" - ")
         
-        # Encontra os dados da subpasta selecionada
+        # Inicializa as somas para "CABOS FO" e "BACKBONE"
+        soma_cabos_fo = 0.0
+        soma_backbone = 0.0
+        
+        # Encontra os dados da GPON selecionada
         for nome_gpon, dados in dados_gpon.items():
             if nome_gpon == gpon_selecionada and "primeiro_nivel" in dados:
-                # Inicializa as somas para "CABOS FO" e "BACKBONE"
-                soma_cabos_fo = 0.0
-                soma_backbone = 0.0
-                
                 # Itera sobre todas as subpastas do primeiro nível
                 for subpasta in dados["primeiro_nivel"]:
                     # Verifica se o nome da subpasta contém "CABOS FO" ou "BACKBONE"
