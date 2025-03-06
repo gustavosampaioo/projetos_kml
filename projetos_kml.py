@@ -162,81 +162,62 @@ def processar_kml(caminho_arquivo):
 def criar_dashboard_gpon(dados_gpon):
     st.subheader("Dashboard GPON - Análise de Subpastas")
     
-    # Cria uma lista de subpastas do primeiro nível para seleção
-    subpastas_primeiro_nivel = []
+    # Inicializa listas para armazenar dados da tabela
+    dados_tabela = []
+    
+    # Itera sobre todas as GPONs e suas subpastas
     for nome_gpon, dados in dados_gpon.items():
         if "primeiro_nivel" in dados:
             for subpasta in dados["primeiro_nivel"]:
-                subpastas_primeiro_nivel.append((nome_gpon, subpasta["nome"]))
+                # Inicializa os totais para a subpasta atual
+                total_rotas = 0
+                total_placemarks = 0
+                soma_distancia = 0.0
+                
+                # Coleta dados de Rotas e Placemarks
+                if "ctos" in subpasta:
+                    for cto in subpasta["ctos"]:
+                        if "rotas" in cto:
+                            total_rotas += len(cto["rotas"])
+                            for rota in cto["rotas"]:
+                                total_placemarks += rota["quantidade_placemarks"]
+                
+                # Calcula a soma das distâncias das LineStrings
+                if "linestrings" in subpasta:
+                    soma_distancia = sum(distancia for _, distancia in subpasta["linestrings"])
+                
+                # Adiciona os dados da subpasta à lista
+                dados_tabela.append([
+                    subpasta["nome"],  # Nome da subpasta
+                    total_rotas,       # Quantidade de rotas
+                    total_placemarks,  # Quantidade de placemarks
+                    soma_distancia     # Soma das distâncias das LineStrings
+                ])
     
-    # Seleciona a subpasta do primeiro nível
-    if subpastas_primeiro_nivel:
-        subpasta_selecionada = st.selectbox(
-            "Selecione a Subpasta do Primeiro Nível:",
-            options=[f"{gpon} - {subpasta}" for gpon, subpasta in subpastas_primeiro_nivel]
-        )
-        
-        # Extrai o nome da GPON e da subpasta selecionada
-        gpon_selecionada, subpasta_nome = subpasta_selecionada.split(" - ")
-        
-        # Inicializa as somas para "CABOS FO" e "BACKBONE"
-        soma_cabos_fo = 0.0
-        soma_backbone = 0.0
-        
-        # Inicializa listas para armazenar dados das tabelas
-        dados_rotas = []
-        dados_placemarks = []
-        
-        # Encontra os dados da GPON selecionada
-        for nome_gpon, dados in dados_gpon.items():
-            if nome_gpon == gpon_selecionada and "primeiro_nivel" in dados:
-                # Itera sobre todas as subpastas do primeiro nível
-                for subpasta in dados["primeiro_nivel"]:
-                    # Verifica se o nome da subpasta contém "CABOS FO" ou "BACKBONE"
-                    if "CABOS FO" in subpasta["nome"].upper():
-                        soma_cabos_fo += sum(distancia for _, distancia in subpasta["linestrings"])
-                    if "BACKBONE" in subpasta["nome"].upper():
-                        soma_backbone += sum(distancia for _, distancia in subpasta["linestrings"])
-                    
-                    # Coleta dados de Rotas e Placemarks
-                    if "ctos" in subpasta:
-                        total_rotas = 0
-                        total_placemarks = 0
-                        for cto in subpasta["ctos"]:
-                            if "rotas" in cto:
-                                total_rotas += len(cto["rotas"])
-                                for rota in cto["rotas"]:
-                                    total_placemarks += rota["quantidade_placemarks"]
-                        
-                        # Adiciona os dados da subpasta às listas
-                        dados_rotas.append([subpasta["nome"], total_rotas])
-                        dados_placemarks.append([subpasta["nome"], total_placemarks])
-                    
-                    # Exibe a soma das distâncias das LineStrings da subpasta selecionada
-                    if subpasta["nome"] == subpasta_nome and "linestrings" in subpasta:
-                        soma_distancia = sum(distancia for _, distancia in subpasta["linestrings"])
-                        st.write(f"**Soma das distâncias das LineStrings na subpasta '{subpasta_nome}': {soma_distancia:.2f} metros**")
-                
-                # Cria DataFrames para as tabelas
-                df_rotas = pd.DataFrame(dados_rotas, columns=["Subpasta", "Quantidade de Rotas"])
-                df_placemarks = pd.DataFrame(dados_placemarks, columns=["Subpasta", "Quantidade de Placemarks"])
-                
-                # Adiciona totais às tabelas
-                df_rotas.loc["Total"] = ["Total", df_rotas["Quantidade de Rotas"].sum()]
-                df_placemarks.loc["Total"] = ["Total", df_placemarks["Quantidade de Placemarks"].sum()]
-                
-                # Exibe as tabelas
-                st.write("### Quantidade de Rotas por Subpasta")
-                st.dataframe(df_rotas)
-                
-                st.write("### Quantidade de Placemarks por Subpasta")
-                st.dataframe(df_placemarks)
-                
-                # Exibe as somas separadas para "CABOS FO" e "BACKBONE"
-                st.write(f"**Soma das distâncias das LineStrings em 'CABOS FO': {soma_cabos_fo:.2f} metros**")
-                st.write(f"**Soma das distâncias das LineStrings em 'BACKBONE': {soma_backbone:.2f} metros**")
-    else:
-        st.warning("Nenhuma subpasta do primeiro nível encontrada.")
+    # Cria o DataFrame para a tabela
+    df_tabela = pd.DataFrame(
+        dados_tabela,
+        columns=["Subpasta", "Quantidade de Rotas", "Quantidade de Placemarks", "Soma das Distâncias (m)"]
+    )
+    
+    # Adiciona uma linha de total
+    df_tabela.loc["Total"] = [
+        "Total",
+        df_tabela["Quantidade de Rotas"].sum(),
+        df_tabela["Quantidade de Placemarks"].sum(),
+        df_tabela["Soma das Distâncias (m)"].sum()
+    ]
+    
+    # Exibe a tabela
+    st.write("### Tabela de Análise por Subpasta")
+    st.dataframe(df_tabela)
+    
+    # Exibe as somas separadas para "CABOS FO" e "BACKBONE"
+    soma_cabos_fo = df_tabela[df_tabela["Subpasta"].str.contains("CABOS FO", case=False, na=False)]["Soma das Distâncias (m)"].sum()
+    soma_backbone = df_tabela[df_tabela["Subpasta"].str.contains("BACKBONE", case=False, na=False)]["Soma das Distâncias (m)"].sum()
+    
+    st.write(f"**Soma das distâncias das LineStrings em 'CABOS FO': {soma_cabos_fo:.2f} metros**")
+    st.write(f"**Soma das distâncias das LineStrings em 'BACKBONE': {soma_backbone:.2f} metros**")
 
 # Configuração do aplicativo Streamlit
 st.title("Calculadora de Distância de Arquivos KML")
