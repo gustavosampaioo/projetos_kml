@@ -56,6 +56,39 @@ def processar_folder_link(folder, estilos):
     
     return distancia_folder, dados, coordenadas_folder
 
+# Função para processar pastas GPON e suas subpastas
+def processar_gpon(root):
+    dados_gpon = {}
+    
+    for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
+        nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
+        
+        # Verifica se o nome da pasta contém "GPON"
+        if "GPON" in nome_folder.upper():
+            subpastas = folder.findall(".//{http://www.opengis.net/kml/2.2}Folder")
+            dados_gpon[nome_folder] = {"subpastas": []}
+            
+            for subpasta in subpastas:
+                nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
+                dados_subpasta = {"nome": nome_subpasta, "ctos": []}
+                
+                # Verifica se a subpasta contém "CTO'S"
+                if "CTO'S" in nome_subpasta.upper():
+                    rotas = subpasta.findall(".//{http://www.opengis.net/kml/2.2}Folder")
+                    dados_subpasta["ctos"] = []
+                    
+                    for rota in rotas:
+                        nome_rota = rota.name.text if hasattr(rota, 'name') else "Rota Desconhecida"
+                        placemarks = rota.findall(".//{http://www.opengis.net/kml/2.2}Placemark")
+                        dados_subpasta["ctos"].append({
+                            "nome_rota": nome_rota,
+                            "quantidade_placemarks": len(placemarks)
+                        })
+                
+                dados_gpon[nome_folder]["subpastas"].append(dados_subpasta)
+    
+    return dados_gpon
+
 # Função para processar o KML e calcular distâncias
 def processar_kml(caminho_arquivo):
     with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
@@ -89,7 +122,10 @@ def processar_kml(caminho_arquivo):
                     lat = float(coords[1])
                     cidades_coords.append((nome, (lat, lon)))
     
-    return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords
+    # Processa pastas GPON
+    dados_gpon = processar_gpon(root)
+    
+    return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon
 
 # Configuração do aplicativo Streamlit
 st.title("Calculadora de Distância de Arquivos KML")
@@ -101,7 +137,7 @@ if uploaded_file is not None:
     with open("temp.kml", "wb") as f:
         f.write(uploaded_file.getbuffer())
     
-    distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords = processar_kml("temp.kml")
+    distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon = processar_kml("temp.kml")
 
     # Exibe tabelas para pastas LINK
     for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
@@ -137,3 +173,18 @@ if uploaded_file is not None:
     folium_static(mapa)
     
     st.success(f"Distância total das Folders 'LINK': {distancia_total:.2f} metros")
+    
+    # Exibe o dashboard para pastas GPON
+    st.subheader("Dashboard GPON")
+    for nome_gpon, dados in dados_gpon.items():
+        st.write(f"### {nome_gpon}")
+        
+        for subpasta in dados["subpastas"]:
+            st.write(f"**Subpasta: {subpasta['nome']}**")
+            
+            if "CTO'S" in subpasta["nome"].upper():
+                st.write(f"Quantidade de rotas: {len(subpasta['ctos']}")
+                
+                for cto in subpasta["ctos"]:
+                    st.write(f"- Rota: {cto['nome_rota']}")
+                    st.write(f"  - Placemarks: {cto['quantidade_placemarks']}")
