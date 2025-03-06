@@ -30,15 +30,16 @@ def processar_folder_link(folder):
             color = "blue"  # Cor padrão
             
             # Verifica se há cor definida no estilo do Placemark
-            style_url = placemark.styleUrl.text if hasattr(placemark, 'styleUrl') else None
-            if style_url:
-                if "red" in style_url.lower():
-                    color = "red"
-                elif "green" in style_url.lower():
-                    color = "green"
-                elif "yellow" in style_url.lower():
-                    color = "yellow"
-
+            style = placemark.findall(".//{http://www.opengis.net/kml/2.2}Style")
+            if style:
+                for s in style:
+                    linestyle = s.find(".//{http://www.opengis.net/kml/2.2}LineStyle")
+                    if linestyle is not None:
+                        color_tag = linestyle.find(".//{http://www.opengis.net/kml/2.2}color")
+                        if color_tag is not None:
+                            kml_color = color_tag.text.strip()
+                            color = f"#{kml_color[6:8]}{kml_color[4:6]}{kml_color[2:4]}"  # Converte de ABGR para RGB
+            
             for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
                 coordinates = line_string.coordinates.text.strip().split()
                 # Converter coordenadas para (latitude, longitude) e inverter a ordem
@@ -93,13 +94,9 @@ if uploaded_file is not None:
         st.write(f"**Soma da distância no folder '{nome_folder}': {distancia_folder:.2f} metros**")
         st.markdown("---")
     
-    # Opção de mapa
-    mapa_tipo = st.radio("Escolha o tipo de mapa:", ["Satélite", "Padrão"], index=0)
-    tiles = "Stamen Terrain" if mapa_tipo == "Padrão" else "Esri WorldImagery"
-    
     # Criar um mapa com Folium
     st.subheader("Mapa das LineStrings")
-    mapa = folium.Map(location=[-15.7801, -47.9292], zoom_start=5, tiles=tiles)
+    mapa = folium.Map(location=[-15.7801, -47.9292], zoom_start=5, tiles="Esri WorldImagery")
     
     for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
         for nome_placemark, coordinates, color in coordenadas_folder:
