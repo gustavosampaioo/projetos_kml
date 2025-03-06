@@ -160,7 +160,7 @@ def processar_kml(caminho_arquivo):
 
 # Função para criar o dashboard GPON
 def criar_dashboard_gpon(dados_gpon):
-    st.subheader("Dashboard GPON - Análise de Subpastas")
+    st.subheader("GPON - Análise Rotas, CTO'S, Fibra Ótica")
     
     # Inicializa listas para armazenar dados da tabela
     dados_tabela = []
@@ -216,7 +216,7 @@ def criar_dashboard_gpon(dados_gpon):
     df_tabela.set_index("ID", inplace=True)
     
     # Exibe a tabela
-    st.write("### Tabela de Análise por Subpasta")
+    st.write("### ")
     st.dataframe(df_tabela)
 
 # Configuração do aplicativo Streamlit
@@ -234,7 +234,7 @@ if uploaded_file is not None:
     distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon = processar_kml("temp.kml")
 
     # Cria o mapa
-    st.subheader("Mapa das LineStrings e Cidades")
+    st.subheader("Mapa do link entre Cidades")
     mapa = folium.Map(location=[-5.0892, -42.8016], zoom_start=5, tiles="Esri WorldImagery")
     
     # Adiciona LineStrings
@@ -261,7 +261,7 @@ if uploaded_file is not None:
     st.success(f"Distância total das Folders 'LINK': {distancia_total:.2f} metros")
     
     # Exibe tabelas para pastas LINK
-    st.subheader("Tabela de Análise por Pasta")
+    st.subheader("Quantitade de Fibra Otica projetada - LINK")
     dados_tabela_pastas = []
 
     # Itera sobre as pastas e coleta os dados
