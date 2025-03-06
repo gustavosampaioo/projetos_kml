@@ -219,7 +219,7 @@ def criar_dashboard_gpon(dados_gpon):
     st.dataframe(df_tabela)
 
 # Configuração do aplicativo Streamlit
-st.title("Analisador de projetos")
+st.title("Analisador de Projetos")
 st.write("Este aplicativo analisa um arquivo no formato .kml e imprime informações bem dinâmicas e interativas sobre o projetos de fibra ótica")
 
 # Upload do arquivo KML
