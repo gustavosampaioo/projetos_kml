@@ -24,8 +24,9 @@ def extrair_estilos(root):
             color_tag = linestyle.find(".//{http://www.opengis.net/kml/2.2}color")
             if color_tag is not None:
                 kml_color = color_tag.text.strip()
-                color = f"#{kml_color[6:8]}{kml_color[4:6]}{kml_color[2:4]}"  # Converte de ABGR para RGB
-                estilos[f"#{style_id}"] = color
+                # Convertendo do formato ABGR para RGB
+                color = f"#{kml_color[6:8]}{kml_color[4:6]}{kml_color[2:4]}"
+                estilos[style_id] = color
     return estilos
 
 # Função para processar folders que contenham "LINK" no nome
@@ -45,8 +46,10 @@ def processar_folder_link(folder, estilos):
             
             # Verifica se há um styleUrl e busca a cor correspondente
             style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
-            if style_url is not None and style_url.text.strip() in estilos:
-                color = estilos[style_url.text.strip()]
+            if style_url is not None:
+                style_id = style_url.text.strip().lstrip("#")  # Remove o '#' se houver
+                if style_id in estilos:
+                    color = estilos[style_id]
             
             for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
                 coordinates = line_string.coordinates.text.strip().split()
