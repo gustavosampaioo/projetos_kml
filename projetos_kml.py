@@ -22,6 +22,7 @@ def processar_folder_link(folder):
         
         # Processa todas as LineStrings dentro da pasta
         for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
+            nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
             for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
                 coordinates = line_string.coordinates.text.strip().split()
                 # Converter coordenadas para (latitude, longitude) e inverter a ordem
@@ -29,7 +30,7 @@ def processar_folder_link(folder):
                 
                 distancia = calcular_distancia_linestring(coordinates)
                 distancia_folder += distancia
-                st.write(f"Distância da LineString: {distancia:.2f} metros")
+                st.write(f"{nome_placemark}: {distancia:.2f} metros")
     
     return distancia_folder
 
