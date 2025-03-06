@@ -68,14 +68,14 @@ def processar_gpon(root):
             dados_gpon[nome_folder] = {"primeiro_nivel": []}
             
             # Coleta todas as subpastas do primeiro nível após a pasta GPON
-            for subpasta in folder.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
+            for subpasta in folder.findall("{http://www.opengis.net/kml/2.2}Folder"):
                 nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
                 
                 # Dados da subpasta do primeiro nível
                 dados_subpasta = {"nome": nome_subpasta, "ctos": []}
                 
                 # Busca por subpastas que contenham "CTO'S" dentro da subpasta do primeiro nível
-                for cto_folder in subpasta.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
+                for cto_folder in subpasta.findall("{http://www.opengis.net/kml/2.2}Folder"):
                     nome_cto = cto_folder.name.text if hasattr(cto_folder, 'name') else "CTO Desconhecido"
                     
                     # Filtra apenas subpastas que contêm "CTO'S" no nome
@@ -83,7 +83,7 @@ def processar_gpon(root):
                         dados_cto = {"nome": nome_cto, "rotas": []}
                         
                         # Processa as rotas dentro da subpasta CTO'S
-                        rotas = cto_folder.findall(".//{http://www.opengis.net/kml/2.2}Folder")
+                        rotas = cto_folder.findall("{http://www.opengis.net/kml/2.2}Folder")
                         for rota in rotas:
                             nome_rota = rota.name.text if hasattr(rota, 'name') else "Rota Desconhecida"
                             placemarks = rota.findall(".//{http://www.opengis.net/kml/2.2}Placemark")
