@@ -27,6 +27,18 @@ def processar_folder_link(folder):
         # Processa todas as LineStrings dentro da pasta
         for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
             nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
+            color = "blue"  # Cor padrão
+            
+            # Verifica se há cor definida no estilo do Placemark
+            style_url = placemark.styleUrl.text if hasattr(placemark, 'styleUrl') else None
+            if style_url:
+                if "red" in style_url.lower():
+                    color = "red"
+                elif "green" in style_url.lower():
+                    color = "green"
+                elif "yellow" in style_url.lower():
+                    color = "yellow"
+
             for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
                 coordinates = line_string.coordinates.text.strip().split()
                 # Converter coordenadas para (latitude, longitude) e inverter a ordem
@@ -35,7 +47,7 @@ def processar_folder_link(folder):
                 distancia = calcular_distancia_linestring(coordinates)
                 distancia_folder += distancia
                 dados.append([nome_placemark, distancia])
-                coordenadas_folder.append((nome_placemark, coordinates))
+                coordenadas_folder.append((nome_placemark, coordinates, color))
     
     return nome_folder, distancia_folder, dados, coordenadas_folder
 
@@ -81,15 +93,19 @@ if uploaded_file is not None:
         st.write(f"**Soma da distância no folder '{nome_folder}': {distancia_folder:.2f} metros**")
         st.markdown("---")
     
+    # Opção de mapa
+    mapa_tipo = st.radio("Escolha o tipo de mapa:", ["Satélite", "Padrão"], index=0)
+    tiles = "Stamen Terrain" if mapa_tipo == "Padrão" else "Esri WorldImagery"
+    
     # Criar um mapa com Folium
     st.subheader("Mapa das LineStrings")
-    mapa = folium.Map(location=[-15.7801, -47.9292], zoom_start=5)  # Posição inicial no Brasil
+    mapa = folium.Map(location=[-15.7801, -47.9292], zoom_start=5, tiles=tiles)
     
     for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
-        for nome_placemark, coordinates in coordenadas_folder:
+        for nome_placemark, coordinates, color in coordenadas_folder:
             folium.PolyLine(
                 coordinates,
-                color="blue",
+                color=color,
                 weight=3,
                 opacity=0.7,
                 tooltip=f"{nome_folder} - {nome_placemark}"
