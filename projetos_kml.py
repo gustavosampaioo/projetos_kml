@@ -229,14 +229,18 @@ def criar_dashboard_gpon(dados_gpon):
                             soma_distancia = sum(distancia for _, distancia in subpasta["linestrings"])
                             st.write(f"**Soma das distâncias das LineStrings na subpasta '{subpasta_nome}': {soma_distancia:.2f} metros**")
                         
-                        # Exibe as somas separadas para subpastas "CABOS FO" e "BACKBONE"
-                        if "CABOS FO" in subpasta_nome.upper():
-                            soma_cabos_fo = sum(distancia for _, distancia in subpasta["linestrings"])
-                            st.write(f"**Soma das distâncias das LineStrings na subpasta 'CABOS FO': {soma_cabos_fo:.2f} metros**")
+                        # Calcula e exibe as somas separadas para "CABOS FO" e "BACKBONE"
+                        soma_cabos_fo = 0.0
+                        soma_backbone = 0.0
                         
-                        if "BACKBONE" in subpasta_nome.upper():
-                            soma_backbone = sum(distancia for _, distancia in subpasta["linestrings"])
-                            st.write(f"**Soma das distâncias das LineStrings na subpasta 'BACKBONE': {soma_backbone:.2f} metros**")
+                        for subpasta_gpon in dados["primeiro_nivel"]:
+                            if "CABOS FO" in subpasta_gpon["nome"].upper():
+                                soma_cabos_fo += sum(distancia for _, distancia in subpasta_gpon["linestrings"])
+                            if "BACKBONE" in subpasta_gpon["nome"].upper():
+                                soma_backbone += sum(distancia for _, distancia in subpasta_gpon["linestrings"])
+                        
+                        st.write(f"**Soma das distâncias das LineStrings em 'CABOS FO': {soma_cabos_fo:.2f} metros**")
+                        st.write(f"**Soma das distâncias das LineStrings em 'BACKBONE': {soma_backbone:.2f} metros**")
     else:
         st.warning("Nenhuma subpasta do primeiro nível encontrada.")
 
