@@ -67,9 +67,13 @@ def processar_gpon(root):
         if "GPON" in nome_folder.upper():
             dados_gpon[nome_folder] = {"subpastas": []}
             
-            # Função recursiva para processar subpastas
-            def processar_subpastas(folder, dados_subpastas):
-                for subpasta in folder.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
+            # Encontra a primeira subpasta após a pasta GPON
+            primeira_subpasta = folder.find(".//{http://www.opengis.net/kml/2.2}Folder")
+            if primeira_subpasta is not None:
+                nome_primeira_subpasta = primeira_subpasta.name.text if hasattr(primeira_subpasta, 'name') else "Subpasta Desconhecida"
+                
+                # Busca por subpastas que contenham "CTO'S" dentro da primeira subpasta
+                for subpasta in primeira_subpasta.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
                     nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
                     
                     # Filtra apenas subpastas que contêm "CTO'S" no nome
@@ -87,13 +91,7 @@ def processar_gpon(root):
                             })
                         
                         # Adiciona a subpasta CTO'S aos dados
-                        dados_subpastas.append(dados_subpasta)
-                    
-                    # Chama recursivamente para processar subpastas aninhadas
-                    processar_subpastas(subpasta, dados_subpastas)
-            
-            # Inicia o processamento das subpastas
-            processar_subpastas(folder, dados_gpon[nome_folder]["subpastas"])
+                        dados_gpon[nome_folder]["subpastas"].append(dados_subpasta)
     
     return dados_gpon
 
