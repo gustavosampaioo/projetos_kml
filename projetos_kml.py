@@ -160,7 +160,6 @@ def processar_kml(caminho_arquivo):
 
 # Função para criar o dashboard GPON
 def criar_dashboard_gpon(dados_gpon):
-    st.subheader("GPON - Análise Rotas, CTO'S, Fibra Ótica")
     
     # Inicializa listas para armazenar dados da tabela
     dados_tabela = []
@@ -216,7 +215,7 @@ def criar_dashboard_gpon(dados_gpon):
     df_tabela.set_index("ID", inplace=True)
     
     # Exibe a tabela
-    st.write("### ")
+    st.write("### GPON - Análise Rotas, CTO'S, Fibra Ótica")
     st.dataframe(df_tabela)
 
 # Configuração do aplicativo Streamlit
@@ -261,7 +260,7 @@ if uploaded_file is not None:
     st.success(f"Distância total das Folders 'LINK': {distancia_total:.2f} metros")
     
     # Exibe tabelas para pastas LINK
-    st.subheader("Quantitade de Fibra Otica projetada - LINK")
+    st.subheader("Quantitade de Fibra Ótica projetada - LINK")
     dados_tabela_pastas = []
 
     # Itera sobre as pastas e coleta os dados
