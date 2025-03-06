@@ -4,6 +4,79 @@ import folium
 from streamlit_folium import folium_static
 from pykml import parser
 from geopy.distance import geodesic
+import plotly.express as px
+
+# Função para criar o dashboard GPON
+def criar_dashboard_gpon(dados_gpon):
+    st.subheader("Dashboard GPON - Análise de Subpastas")
+    
+    # Cria uma lista de subpastas do primeiro nível para seleção
+    subpastas_primeiro_nivel = []
+    for nome_gpon, dados in dados_gpon.items():
+        if "primeiro_nivel" in dados:
+            for subpasta in dados["primeiro_nivel"]:
+                subpastas_primeiro_nivel.append((nome_gpon, subpasta["nome"]))
+    
+    # Seleciona a subpasta do primeiro nível
+    if subpastas_primeiro_nivel:
+        subpasta_selecionada = st.selectbox(
+            "Selecione a Subpasta do Primeiro Nível:",
+            options=[f"{gpon} - {subpasta}" for gpon, subpasta in subpastas_primeiro_nivel]
+        )
+        
+        # Extrai o nome da GPON e da subpasta selecionada
+        gpon_selecionada, subpasta_nome = subpasta_selecionada.split(" - ")
+        
+        # Encontra os dados da subpasta selecionada
+        for nome_gpon, dados in dados_gpon.items():
+            if nome_gpon == gpon_selecionada and "primeiro_nivel" in dados:
+                for subpasta in dados["primeiro_nivel"]:
+                    if subpasta["nome"] == subpasta_nome:
+                        # Cria um DataFrame para as contagens de Rotas e Placemarks
+                        dados_grafico = []
+                        if "ctos" in subpasta:
+                            for cto in subpasta["ctos"]:
+                                if "rotas" in cto:
+                                    for rota in cto["rotas"]:
+                                        dados_grafico.append({
+                                            "CTO": cto["nome"],
+                                            "Rota": rota["nome_rota"],
+                                            "Quantidade Placemarks": rota["quantidade_placemarks"]
+                                        })
+                        
+                        # Converte para DataFrame
+                        df = pd.DataFrame(dados_grafico)
+                        
+                        # Exibe o DataFrame
+                        st.write("### Dados das Rotas e Placemarks")
+                        st.dataframe(df)
+                        
+                        # Cria gráficos
+                        if not df.empty:
+                            st.write("### Gráfico de Quantidade de Placemarks por Rota")
+                            fig = px.bar(
+                                df,
+                                x="Rota",
+                                y="Quantidade Placemarks",
+                                color="CTO",
+                                title=f"Quantidade de Placemarks por Rota - {subpasta_nome}"
+                            )
+                            st.plotly_chart(fig)
+                            
+                            st.write("### Gráfico de Quantidade de Rotas por CTO")
+                            fig2 = px.bar(
+                                df.groupby("CTO").size().reset_index(name="Quantidade Rotas"),
+                                x="CTO",
+                                y="Quantidade Rotas",
+                                title=f"Quantidade de Rotas por CTO - {subpasta_nome}"
+                            )
+                            st.plotly_chart(fig2)
+    else:
+        st.warning("Nenhuma subpasta do primeiro nível encontrada.")
+
+# Adiciona o dashboard GPON ao aplicativo principal
+if uploaded_file is not None:
+    criar_dashboard_gpon(dados_gpon)
 
 # Função para calcular a distância total de uma LineString em metros
 def calcular_distancia_linestring(coordinates):
