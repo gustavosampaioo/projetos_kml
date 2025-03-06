@@ -3,4 +3,4 @@ pykml
 geopy
 lxml
 pandas
-folium_static
+streamlit-folium
