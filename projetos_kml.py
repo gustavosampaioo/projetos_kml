@@ -14,8 +14,22 @@ def calcular_distancia_linestring(coordinates):
         distancia_total += geodesic(ponto_atual, proximo_ponto).meters
     return distancia_total
 
+# Função para extrair estilos do KML
+def extrair_estilos(root):
+    estilos = {}
+    for estilo in root.findall(".//{http://www.opengis.net/kml/2.2}Style"):
+        style_id = estilo.get("id")
+        linestyle = estilo.find(".//{http://www.opengis.net/kml/2.2}LineStyle")
+        if linestyle is not None:
+            color_tag = linestyle.find(".//{http://www.opengis.net/kml/2.2}color")
+            if color_tag is not None:
+                kml_color = color_tag.text.strip()
+                color = f"#{kml_color[6:8]}{kml_color[4:6]}{kml_color[2:4]}"  # Converte de ABGR para RGB
+                estilos[f"#{style_id}"] = color
+    return estilos
+
 # Função para processar folders que contenham "LINK" no nome
-def processar_folder_link(folder):
+def processar_folder_link(folder, estilos):
     distancia_folder = 0.0
     dados = []
     coordenadas_folder = []
@@ -29,16 +43,10 @@ def processar_folder_link(folder):
             nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
             color = "blue"  # Cor padrão
             
-            # Verifica se há cor definida no estilo do Placemark
-            style = placemark.findall(".//{http://www.opengis.net/kml/2.2}Style")
-            if style:
-                for s in style:
-                    linestyle = s.find(".//{http://www.opengis.net/kml/2.2}LineStyle")
-                    if linestyle is not None:
-                        color_tag = linestyle.find(".//{http://www.opengis.net/kml/2.2}color")
-                        if color_tag is not None:
-                            kml_color = color_tag.text.strip()
-                            color = f"#{kml_color[6:8]}{kml_color[4:6]}{kml_color[2:4]}"  # Converte de ABGR para RGB
+            # Verifica se há um styleUrl e busca a cor correspondente
+            style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
+            if style_url is not None and style_url.text.strip() in estilos:
+                color = estilos[style_url.text.strip()]
             
             for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
                 coordinates = line_string.coordinates.text.strip().split()
@@ -57,13 +65,14 @@ def processar_kml(caminho_arquivo):
     with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
         root = parser.parse(arquivo).getroot()
     
+    estilos = extrair_estilos(root)
     distancia_total = 0.0
     dados_por_pasta = {}
     coordenadas_por_pasta = {}
     
     # Processa todas as pastas do KML
     for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
-        nome_folder, distancia_folder, dados, coordenadas_folder = processar_folder_link(folder)
+        nome_folder, distancia_folder, dados, coordenadas_folder = processar_folder_link(folder, estilos)
         distancia_total += distancia_folder
         if dados:
             dados_por_pasta[nome_folder] = (distancia_folder, dados)
