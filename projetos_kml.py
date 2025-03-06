@@ -206,7 +206,7 @@ def criar_dashboard_gpon(dados_gpon):
     # Adiciona uma linha de total
     df_tabela.loc["Total"] = [
         "",  # ID (vazio para a linha de total)
-        "**Total**",  # Subpasta
+        "Total",  # Subpasta
         df_tabela["Quantidade de Rotas"].sum(),
         df_tabela["Quantidade de Placemarks"].sum(),
         df_tabela["Soma das Distâncias (m)"].sum()
@@ -283,7 +283,7 @@ if uploaded_file is not None:
     total_distancia = df_tabela_pastas["Distância (m)"].sum()
     df_tabela_pastas.loc["Total"] = [
         "",  # ID (vazio para a linha de total)
-        "**Total**",  # Folder
+        "Total",  # Folder
         "",  # LineString (vazio para a linha de total)
         total_distancia  # Soma total
     ]
