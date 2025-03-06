@@ -190,12 +190,18 @@ if uploaded_file is not None:
     for nome_gpon, dados in dados_gpon.items():
         st.write(f"### {nome_gpon}")
         
-        for subpasta in dados["subpastas"]:
-            st.write(f"**Subpasta: {subpasta['nome']}**")
-            
-            if "CTO'S" in subpasta["nome"].upper():
-                st.write(f"Quantidade de rotas: {len(subpasta['ctos'])}")
+        # Verifica se a chave "primeiro_nivel" existe nos dados
+        if "primeiro_nivel" in dados:
+            for subpasta in dados["primeiro_nivel"]:
+                st.write(f"**Subpasta do Primeiro Nível:** {subpasta['nome']}")
                 
-                for cto in subpasta["ctos"]:
-                    st.write(f"- Rota: {cto['nome_rota']}")
-                    st.write(f"  - Placemarks: {cto['quantidade_placemarks']}")
+                # Verifica se a chave "ctos" existe na subpasta
+                if "ctos" in subpasta:
+                    for cto in subpasta["ctos"]:
+                        st.write(f"**CTO'S:** {cto['nome']}")
+                        
+                        # Verifica se a chave "rotas" existe no CTO
+                        if "rotas" in cto:
+                            for rota in cto["rotas"]:
+                                st.write(f"- Rota: {rota['nome_rota']}")
+                                st.write(f"  - Placemarks: {rota['quantidade_placemarks']}")
