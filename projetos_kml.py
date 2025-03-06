@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import folium
+from streamlit_folium import folium_static
 from pykml import parser
 from geopy.distance import geodesic
 
@@ -16,6 +18,7 @@ def calcular_distancia_linestring(coordinates):
 def processar_folder_link(folder):
     distancia_folder = 0.0
     dados = []
+    coordenadas_folder = []
     
     # Obtém o nome da pasta
     nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
@@ -32,8 +35,9 @@ def processar_folder_link(folder):
                 distancia = calcular_distancia_linestring(coordinates)
                 distancia_folder += distancia
                 dados.append([nome_placemark, distancia])
+                coordenadas_folder.append((nome_placemark, coordinates))
     
-    return nome_folder, distancia_folder, dados
+    return nome_folder, distancia_folder, dados, coordenadas_folder
 
 # Função para processar o KML e calcular a distância das pastas "LINK"
 def processar_kml(caminho_arquivo):
@@ -42,15 +46,17 @@ def processar_kml(caminho_arquivo):
     
     distancia_total = 0.0
     dados_por_pasta = {}
+    coordenadas_por_pasta = {}
     
     # Processa todas as pastas do KML
     for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
-        nome_folder, distancia_folder, dados = processar_folder_link(folder)
+        nome_folder, distancia_folder, dados, coordenadas_folder = processar_folder_link(folder)
         distancia_total += distancia_folder
         if dados:
             dados_por_pasta[nome_folder] = (distancia_folder, dados)
+            coordenadas_por_pasta[nome_folder] = coordenadas_folder
     
-    return distancia_total, dados_por_pasta
+    return distancia_total, dados_por_pasta, coordenadas_por_pasta
 
 # Configuração do aplicativo Streamlit
 st.title("Calculadora de Distância de Arquivos KML")
@@ -65,7 +71,7 @@ if uploaded_file is not None:
         f.write(uploaded_file.getbuffer())
     
     # Processa o arquivo KML
-    distancia_total, dados_por_pasta = processar_kml("temp.kml")
+    distancia_total, dados_por_pasta, coordenadas_por_pasta = processar_kml("temp.kml")
     
     # Exibe tabelas individuais para cada folder
     for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
@@ -74,6 +80,23 @@ if uploaded_file is not None:
         st.dataframe(df)
         st.write(f"**Soma da distância no folder '{nome_folder}': {distancia_folder:.2f} metros**")
         st.markdown("---")
+    
+    # Criar um mapa com Folium
+    st.subheader("Mapa das LineStrings")
+    mapa = folium.Map(location=[-15.7801, -47.9292], zoom_start=5)  # Posição inicial no Brasil
+    
+    for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
+        for nome_placemark, coordinates in coordenadas_folder:
+            folium.PolyLine(
+                coordinates,
+                color="blue",
+                weight=3,
+                opacity=0.7,
+                tooltip=f"{nome_folder} - {nome_placemark}"
+            ).add_to(mapa)
+    
+    # Exibir o mapa no Streamlit
+    folium_static(mapa)
     
     # Exibe a distância total
     st.success(f"Distância total das Folders 'LINK': {distancia_total:.2f} metros")
