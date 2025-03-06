@@ -57,14 +57,18 @@ def processar_folder_link(folder, estilos):
     return distancia_folder, dados, coordenadas_folder
 
 # Função para buscar recursivamente por pastas "CTO'S"
-def buscar_ctos(folder):
+def buscar_ctos(folder, ctos_processados=None):
+    if ctos_processados is None:
+        ctos_processados = set()  # Conjunto para rastrear pastas "CTO'S" já processadas
+    
     ctos = []
     
     for subpasta in folder.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
         nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
         
-        # Se a subpasta contiver "CTO'S" no nome, adiciona à lista
-        if "CTO'S" in nome_subpasta.upper():
+        # Se a subpasta contiver "CTO'S" no nome e ainda não foi processada
+        if "CTO'S" in nome_subpasta.upper() and nome_subpasta not in ctos_processados:
+            ctos_processados.add(nome_subpasta)  # Marca a pasta como processada
             dados_cto = {"nome": nome_subpasta, "rotas": []}
             
             # Processa as rotas dentro da subpasta CTO'S
@@ -80,7 +84,7 @@ def buscar_ctos(folder):
             ctos.append(dados_cto)
         
         # Busca recursivamente por mais pastas "CTO'S" dentro da subpasta atual
-        ctos.extend(buscar_ctos(subpasta))
+        ctos.extend(buscar_ctos(subpasta, ctos_processados))
     
     return ctos
 
