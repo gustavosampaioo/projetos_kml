@@ -226,14 +226,6 @@ if uploaded_file is not None:
     
     distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon = processar_kml("temp.kml")
 
-    # Exibe tabelas para pastas LINK
-    for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
-        st.subheader(f"Folder: {nome_folder}")
-        df = pd.DataFrame(dados, columns=["LineString", "Distância (m)"])
-        st.dataframe(df)
-        st.write(f"**Soma da distância no folder '{nome_folder}': {distancia_folder:.2f} metros**")
-        st.markdown("---")
-    
     # Cria o mapa
     st.subheader("Mapa das LineStrings e Cidades")
     mapa = folium.Map(location=[-15.7801, -47.9292], zoom_start=5, tiles="Esri WorldImagery")
@@ -260,6 +252,31 @@ if uploaded_file is not None:
     folium_static(mapa)
     
     st.success(f"Distância total das Folders 'LINK': {distancia_total:.2f} metros")
+    
+    # Exibe tabelas para pastas LINK
+    st.subheader("Tabela de Análise por Pasta")
+    dados_tabela_pastas = []
+    
+    for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
+        df = pd.DataFrame(dados, columns=["LineString", "Distância (m)"])
+        dados_tabela_pastas.append([nome_folder, distancia_folder])
+        st.write(f"**Folder: {nome_folder}**")
+        st.dataframe(df)
+        st.write(f"**Soma da distância no folder '{nome_folder}': {distancia_folder:.2f} metros**")
+        st.markdown("---")
+    
+    # Adiciona uma linha de total na tabela de pastas
+    df_tabela_pastas = pd.DataFrame(
+        dados_tabela_pastas,
+        columns=["Folder", "Distância Total (m)"]
+    )
+    df_tabela_pastas.loc["Total"] = [
+        "Total",
+        df_tabela_pastas["Distância Total (m)"].sum()
+    ]
+    
+    st.write("### Tabela de Distâncias por Pasta")
+    st.dataframe(df_tabela_pastas)
     
     # Exibe o dashboard para pastas GPON
     criar_dashboard_gpon(dados_gpon)
