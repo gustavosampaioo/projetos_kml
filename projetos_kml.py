@@ -57,6 +57,7 @@ def processar_folder_link(folder, estilos):
     return distancia_folder, dados, coordenadas_folder
 
 # Função para processar pastas GPON e suas subpastas
+# Função para processar pastas GPON e suas subpastas
 def processar_gpon(root):
     dados_gpon = {}
     
@@ -65,14 +66,11 @@ def processar_gpon(root):
         
         # Verifica se o nome da pasta contém "GPON"
         if "GPON" in nome_folder.upper():
-            subpastas = folder.findall(".//{http://www.opengis.net/kml/2.2}Folder")
-            if subpastas:  # Verifica se há subpastas
-                primeira_subpasta = subpastas[0]  # Pega a primeira subpasta
-                nome_primeira_subpasta = primeira_subpasta.name.text if hasattr(primeira_subpasta, 'name') else "Subpasta Desconhecida"
-                dados_gpon[nome_folder] = {"subpastas": []}
-                
-                # Busca por "CTO'S" em qualquer subpasta dentro da primeira subpasta
-                for subpasta in primeira_subpasta.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
+            dados_gpon[nome_folder] = {"subpastas": []}
+            
+            # Função recursiva para processar subpastas
+            def processar_subpastas(folder, dados_subpastas):
+                for subpasta in folder.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
                     nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
                     dados_subpasta = {"nome": nome_subpasta, "ctos": []}
                     
@@ -88,7 +86,12 @@ def processar_gpon(root):
                                 "quantidade_placemarks": len(placemarks)
                             })
                     
-                    dados_gpon[nome_folder]["subpastas"].append(dados_subpasta)
+                    dados_subpastas.append(dados_subpasta)
+                    # Chama recursivamente para processar subpastas aninhadas
+                    processar_subpastas(subpasta, dados_subpastas)
+            
+            # Inicia o processamento das subpastas
+            processar_subpastas(folder, dados_gpon[nome_folder]["subpastas"])
     
     return dados_gpon
 
