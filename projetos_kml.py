@@ -182,7 +182,19 @@ def criar_dashboard_gpon(dados_gpon):
         # Encontra os dados da subpasta selecionada
         for nome_gpon, dados in dados_gpon.items():
             if nome_gpon == gpon_selecionada and "primeiro_nivel" in dados:
+                # Inicializa as somas para "CABOS FO" e "BACKBONE"
+                soma_cabos_fo = 0.0
+                soma_backbone = 0.0
+                
+                # Itera sobre todas as subpastas do primeiro nível
                 for subpasta in dados["primeiro_nivel"]:
+                    # Verifica se o nome da subpasta contém "CABOS FO" ou "BACKBONE"
+                    if "CABOS FO" in subpasta["nome"].upper():
+                        soma_cabos_fo += sum(distancia for _, distancia in subpasta["linestrings"])
+                    if "BACKBONE" in subpasta["nome"].upper():
+                        soma_backbone += sum(distancia for _, distancia in subpasta["linestrings"])
+                    
+                    # Exibe os dados da subpasta selecionada
                     if subpasta["nome"] == subpasta_nome:
                         # Cria um DataFrame para as contagens de Rotas e Placemarks
                         dados_grafico = []
@@ -224,23 +236,14 @@ def criar_dashboard_gpon(dados_gpon):
                             )
                             st.plotly_chart(fig2)
                         
-                        # Exibe a soma das distâncias das LineStrings
+                        # Exibe a soma das distâncias das LineStrings da subpasta selecionada
                         if "linestrings" in subpasta:
                             soma_distancia = sum(distancia for _, distancia in subpasta["linestrings"])
                             st.write(f"**Soma das distâncias das LineStrings na subpasta '{subpasta_nome}': {soma_distancia:.2f} metros**")
-                        
-                        # Calcula e exibe as somas separadas para "CABOS FO" e "BACKBONE"
-                        soma_cabos_fo = 0.0
-                        soma_backbone = 0.0
-                        
-                        for subpasta_gpon in dados["primeiro_nivel"]:
-                            if "CABOS FO" in subpasta_gpon["nome"].upper():
-                                soma_cabos_fo += sum(distancia for _, distancia in subpasta_gpon["linestrings"])
-                            if "BACKBONE" in subpasta_gpon["nome"].upper():
-                                soma_backbone += sum(distancia for _, distancia in subpasta_gpon["linestrings"])
-                        
-                        st.write(f"**Soma das distâncias das LineStrings em 'CABOS FO': {soma_cabos_fo:.2f} metros**")
-                        st.write(f"**Soma das distâncias das LineStrings em 'BACKBONE': {soma_backbone:.2f} metros**")
+                
+                # Exibe as somas separadas para "CABOS FO" e "BACKBONE"
+                st.write(f"**Soma das distâncias das LineStrings em 'CABOS FO': {soma_cabos_fo:.2f} metros**")
+                st.write(f"**Soma das distâncias das LineStrings em 'BACKBONE': {soma_backbone:.2f} metros**")
     else:
         st.warning("Nenhuma subpasta do primeiro nível encontrada.")
 
