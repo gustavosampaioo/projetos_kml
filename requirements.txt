@@ -4,3 +4,4 @@ geopy
 lxml
 pandas
 folium
+folium_static
