@@ -66,26 +66,29 @@ def processar_gpon(root):
         # Verifica se o nome da pasta contém "GPON"
         if "GPON" in nome_folder.upper():
             subpastas = folder.findall(".//{http://www.opengis.net/kml/2.2}Folder")
-            dados_gpon[nome_folder] = {"subpastas": []}
-            
-            for subpasta in subpastas:
-                nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
-                dados_subpasta = {"nome": nome_subpasta, "ctos": []}
+            if subpastas:  # Verifica se há subpastas
+                primeira_subpasta = subpastas[0]  # Pega a primeira subpasta
+                nome_primeira_subpasta = primeira_subpasta.name.text if hasattr(primeira_subpasta, 'name') else "Subpasta Desconhecida"
+                dados_gpon[nome_folder] = {"subpastas": []}
                 
-                # Verifica se a subpasta contém "CTO'S"
-                if "CTO'S" in nome_subpasta.upper():
-                    rotas = subpasta.findall(".//{http://www.opengis.net/kml/2.2}Folder")
-                    dados_subpasta["ctos"] = []
+                # Busca por "CTO'S" em qualquer subpasta dentro da primeira subpasta
+                for subpasta in primeira_subpasta.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
+                    nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
+                    dados_subpasta = {"nome": nome_subpasta, "ctos": []}
                     
-                    for rota in rotas:
-                        nome_rota = rota.name.text if hasattr(rota, 'name') else "Rota Desconhecida"
-                        placemarks = rota.findall(".//{http://www.opengis.net/kml/2.2}Placemark")
-                        dados_subpasta["ctos"].append({
-                            "nome_rota": nome_rota,
-                            "quantidade_placemarks": len(placemarks)
-                        })
-                
-                dados_gpon[nome_folder]["subpastas"].append(dados_subpasta)
+                    if "CTO'S" in nome_subpasta.upper():
+                        rotas = subpasta.findall(".//{http://www.opengis.net/kml/2.2}Folder")
+                        dados_subpasta["ctos"] = []
+                        
+                        for rota in rotas:
+                            nome_rota = rota.name.text if hasattr(rota, 'name') else "Rota Desconhecida"
+                            placemarks = rota.findall(".//{http://www.opengis.net/kml/2.2}Placemark")
+                            dados_subpasta["ctos"].append({
+                                "nome_rota": nome_rota,
+                                "quantidade_placemarks": len(placemarks)
+                            })
+                    
+                    dados_gpon[nome_folder]["subpastas"].append(dados_subpasta)
     
     return dados_gpon
 
