@@ -212,9 +212,9 @@ def criar_dashboard_gpon(dados_gpon):
         df_tabela["Soma das Distâncias (m)"].sum()
     ]
     
-    # Exibe a tabela sem a coluna de índice do sistema
+    # Exibe a tabela
     st.write("### Tabela de Análise por Subpasta")
-    st.dataframe(df_tabela.hide_index())
+    st.dataframe(df_tabela)
 
 # Configuração do aplicativo Streamlit
 st.title("Calculadora de Distância de Arquivos KML")
@@ -260,22 +260,22 @@ if uploaded_file is not None:
     # Exibe tabelas para pastas LINK
     st.subheader("Tabela de Análise por Pasta")
     dados_tabela_pastas = []
-
+    
     # Itera sobre as pastas e coleta os dados
     for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
         # Adiciona os dados de cada linha da pasta
         for linha in dados:
             dados_tabela_pastas.append([nome_folder, linha[0], linha[1]])  # [Folder, LineString, Distância]
-
+    
     # Cria o DataFrame para a tabela
     df_tabela_pastas = pd.DataFrame(
         dados_tabela_pastas,
         columns=["Folder", "LineString", "Distância (m)"]
     )
-
+    
     # Adiciona a coluna ID
     df_tabela_pastas.insert(0, "ID", range(1, len(df_tabela_pastas) + 1))
-
+    
     # Adiciona uma linha de total ao final da tabela
     total_distancia = df_tabela_pastas["Distância (m)"].sum()
     df_tabela_pastas.loc["Total"] = [
@@ -284,9 +284,9 @@ if uploaded_file is not None:
         "",  # LineString (vazio para a linha de total)
         total_distancia  # Soma total
     ]
-
-    # Exibe a tabela sem a coluna de índice do sistema
-    st.dataframe(df_tabela_pastas.hide_index())
+    
+    # Exibe a tabela
+    st.dataframe(df_tabela_pastas)
     
     # Exibe o dashboard para pastas GPON
     criar_dashboard_gpon(dados_gpon)
