@@ -31,9 +31,9 @@ def processar_folder_link(folder):
                 
                 distancia = calcular_distancia_linestring(coordinates)
                 distancia_folder += distancia
-                dados.append([nome_folder, nome_placemark, distancia])
+                dados.append([nome_placemark, distancia])
     
-    return distancia_folder, dados
+    return nome_folder, distancia_folder, dados
 
 # Função para processar o KML e calcular a distância das pastas "LINK"
 def processar_kml(caminho_arquivo):
@@ -41,19 +41,20 @@ def processar_kml(caminho_arquivo):
         root = parser.parse(arquivo).getroot()
     
     distancia_total = 0.0
-    dados_gerais = []
+    dados_por_pasta = {}
     
     # Processa todas as pastas do KML
     for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
-        distancia_folder, dados = processar_folder_link(folder)
+        nome_folder, distancia_folder, dados = processar_folder_link(folder)
         distancia_total += distancia_folder
-        dados_gerais.extend(dados)
+        if dados:
+            dados_por_pasta[nome_folder] = (distancia_folder, dados)
     
-    return distancia_total, dados_gerais
+    return distancia_total, dados_por_pasta
 
 # Configuração do aplicativo Streamlit
 st.title("Calculadora de Distância de Arquivos KML")
-st.write("Este aplicativo calcula a distância total das LineStrings dentro de Folders contendo 'LINK' no nome e organiza os dados em formato de tabela.")
+st.write("Este aplicativo calcula a distância total das LineStrings dentro de Folders contendo 'LINK' no nome e exibe os dados organizados por pasta.")
 
 # Upload do arquivo KML
 uploaded_file = st.file_uploader("Carregue um arquivo KML", type=["kml"])
@@ -64,11 +65,15 @@ if uploaded_file is not None:
         f.write(uploaded_file.getbuffer())
     
     # Processa o arquivo KML
-    distancia_total, dados_gerais = processar_kml("temp.kml")
+    distancia_total, dados_por_pasta = processar_kml("temp.kml")
     
-    # Exibe a tabela de distâncias
-    df = pd.DataFrame(dados_gerais, columns=["Folder", "LineString", "Distância (m)"])
-    st.dataframe(df)
+    # Exibe tabelas individuais para cada folder
+    for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
+        st.subheader(f"Folder: {nome_folder}")
+        df = pd.DataFrame(dados, columns=["LineString", "Distância (m)"])
+        st.dataframe(df)
+        st.write(f"**Soma da distância no folder '{nome_folder}': {distancia_folder:.2f} metros**")
+        st.markdown("---")
     
     # Exibe a distância total
     st.success(f"Distância total das Folders 'LINK': {distancia_total:.2f} metros")
