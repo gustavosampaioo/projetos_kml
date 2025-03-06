@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from pykml import parser
 from geopy.distance import geodesic
 
@@ -14,11 +15,11 @@ def calcular_distancia_linestring(coordinates):
 # Função para processar folders que contenham "LINK" no nome
 def processar_folder_link(folder):
     distancia_folder = 0.0
+    dados = []
     
     # Obtém o nome da pasta
-    nome_folder = folder.name.text if hasattr(folder, 'name') else ""
+    nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
     if "LINK" in nome_folder.upper():
-        st.subheader(f"Processando Folder: {nome_folder}")
         
         # Processa todas as LineStrings dentro da pasta
         for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
@@ -30,9 +31,9 @@ def processar_folder_link(folder):
                 
                 distancia = calcular_distancia_linestring(coordinates)
                 distancia_folder += distancia
-                st.write(f"{nome_placemark}: {distancia:.2f} metros")
+                dados.append([nome_folder, nome_placemark, distancia])
     
-    return distancia_folder
+    return distancia_folder, dados
 
 # Função para processar o KML e calcular a distância das pastas "LINK"
 def processar_kml(caminho_arquivo):
@@ -40,16 +41,19 @@ def processar_kml(caminho_arquivo):
         root = parser.parse(arquivo).getroot()
     
     distancia_total = 0.0
+    dados_gerais = []
     
     # Processa todas as pastas do KML
     for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
-        distancia_total += processar_folder_link(folder)
+        distancia_folder, dados = processar_folder_link(folder)
+        distancia_total += distancia_folder
+        dados_gerais.extend(dados)
     
-    return distancia_total
+    return distancia_total, dados_gerais
 
 # Configuração do aplicativo Streamlit
 st.title("Calculadora de Distância de Arquivos KML")
-st.write("Este aplicativo calcula a distância total das LineStrings dentro de Folders contendo 'LINK' no nome.")
+st.write("Este aplicativo calcula a distância total das LineStrings dentro de Folders contendo 'LINK' no nome e organiza os dados em formato de tabela.")
 
 # Upload do arquivo KML
 uploaded_file = st.file_uploader("Carregue um arquivo KML", type=["kml"])
@@ -60,7 +64,11 @@ if uploaded_file is not None:
         f.write(uploaded_file.getbuffer())
     
     # Processa o arquivo KML
-    distancia_total = processar_kml("temp.kml")
+    distancia_total, dados_gerais = processar_kml("temp.kml")
+    
+    # Exibe a tabela de distâncias
+    df = pd.DataFrame(dados_gerais, columns=["Folder", "LineString", "Distância (m)"])
+    st.dataframe(df)
     
     # Exibe a distância total
     st.success(f"Distância total das Folders 'LINK': {distancia_total:.2f} metros")
