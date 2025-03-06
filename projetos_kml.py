@@ -235,7 +235,7 @@ if uploaded_file is not None:
 
     # Cria o mapa
     st.subheader("Mapa das LineStrings e Cidades")
-    mapa = folium.Map(location=[-15.7801, -47.9292], zoom_start=5, tiles="Esri WorldImagery")
+    mapa = folium.Map(location=[-5.0892, -42.8016], zoom_start=5, tiles="Esri WorldImagery")
     
     # Adiciona LineStrings
     for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
