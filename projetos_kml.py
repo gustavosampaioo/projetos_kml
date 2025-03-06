@@ -233,7 +233,7 @@ if uploaded_file is not None:
     distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon = processar_kml("temp.kml")
 
     # Cria o mapa
-    st.subheader("Mapa do link entre Cidades")
+    st.subheader("Mapa do Link entre Cidades")
     mapa = folium.Map(location=[-5.0892, -42.8016], zoom_start=5, tiles="Esri WorldImagery")
     
     # Adiciona LineStrings
