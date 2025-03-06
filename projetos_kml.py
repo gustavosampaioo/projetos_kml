@@ -4,6 +4,9 @@ import folium
 from streamlit_folium import folium_static
 from pykml import parser
 from geopy.distance import geodesic
+import requests
+from io import BytesIO
+from PIL import Image
 
 # Função para calcular a distância total de uma LineString em metros
 def calcular_distancia_linestring(coordinates):
@@ -26,15 +29,19 @@ def extrair_estilos(root):
             if color_tag is not None:
                 kml_color = color_tag.text.strip()
                 color = f"#{kml_color[6:8]}{kml_color[4:6]}{kml_color[2:4]}"
-                estilos[style_id] = color
-        # Extrai cor do IconStyle
+                estilos[style_id] = {"line_color": color}
+        
+        # Extrai ícone do IconStyle
         iconstyle = estilo.find(".//{http://www.opengis.net/kml/2.2}IconStyle")
         if iconstyle is not None:
-            color_tag = iconstyle.find(".//{http://www.opengis.net/kml/2.2}color")
-            if color_tag is not None:
-                kml_color = color_tag.text.strip()
-                color = f"#{kml_color[6:8]}{kml_color[4:6]}{kml_color[2:4]}"
-                estilos[style_id] = color
+            icon = iconstyle.find(".//{http://www.opengis.net/kml/2.2}Icon")
+            if icon is not None:
+                icon_url = icon.find(".//{http://www.opengis.net/kml/2.2}href").text.strip()
+                # Adiciona o ícone ao estilo
+                if style_id in estilos:
+                    estilos[style_id]["icon_url"] = icon_url
+                else:
+                    estilos[style_id] = {"icon_url": icon_url}
     return estilos
 
 # Função para processar folders que contenham "LINK" no nome
@@ -50,8 +57,8 @@ def processar_folder_link(folder, estilos):
         style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
         if style_url is not None:
             style_id = style_url.text.strip().lstrip("#")
-            if style_id in estilos:
-                color = estilos[style_id]
+            if style_id in estilos and "line_color" in estilos[style_id]:
+                color = estilos[style_id]["line_color"]
         
         for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
             coordinates = line_string.coordinates.text.strip().split()
@@ -86,8 +93,8 @@ def processar_kml(caminho_arquivo):
                 dados_por_pasta[nome_folder] = (distancia_folder, dados)
                 coordenadas_por_pasta[nome_folder] = coordenadas_folder
         
-        # Processa pasta CIDADES
-        elif nome_folder.upper() == "CIDADES":
+        # Processa pastas que contenham "CIDADES" no nome
+        if "CIDADES" in nome_folder.upper():
             for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
                 nome = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
                 point = placemark.find(".//{http://www.opengis.net/kml/2.2}Point")
@@ -95,17 +102,30 @@ def processar_kml(caminho_arquivo):
                     coords = point.coordinates.text.strip().split(',')
                     lon = float(coords[0])
                     lat = float(coords[1])
-                    color = "blue"
                     
+                    # Obtém o ícone do placemark
+                    icon_url = None
                     style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
                     if style_url is not None:
                         style_id = style_url.text.strip().lstrip("#")
-                        if style_id in estilos:
-                            color = estilos[style_id]
+                        if style_id in estilos and "icon_url" in estilos[style_id]:
+                            icon_url = estilos[style_id]["icon_url"]
                     
-                    cidades_coords.append((nome, (lat, lon), color))
+                    cidades_coords.append((nome, (lat, lon), icon_url))
     
     return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords
+
+# Função para carregar ícones de URLs
+def carregar_icone(url):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return Image.open(BytesIO(response.content))
+        else:
+            return None
+    except Exception as e:
+        st.warning(f"Erro ao carregar ícone: {e}")
+        return None
 
 # Configuração do aplicativo Streamlit
 st.title("Calculadora de Distância de Arquivos KML")
@@ -143,16 +163,32 @@ if uploaded_file is not None:
             ).add_to(mapa)
     
     # Adiciona marcadores para CIDADES
-    for nome, coord, color in cidades_coords:
-        folium.CircleMarker(
-            location=coord,
-            radius=5,
-            fill=True,
-            color=color,
-            fill_color=color,
-            fill_opacity=1,
-            popup=nome
-        ).add_to(mapa)
+    for nome, coord, icon_url in cidades_coords:
+        if icon_url:
+            # Carrega o ícone do KML
+            icone = carregar_icone(icon_url)
+            if icone:
+                # Converte o ícone para um formato que o Folium possa usar
+                icone = folium.features.CustomIcon(icon_url, icon_size=(32, 32))
+                folium.Marker(
+                    location=coord,
+                    icon=icone,
+                    popup=nome
+                ).add_to(mapa)
+            else:
+                # Usa um ícone padrão se o ícone do KML não puder ser carregado
+                folium.Marker(
+                    location=coord,
+                    icon=folium.Icon(color="blue"),
+                    popup=nome
+                ).add_to(mapa)
+        else:
+            # Usa um ícone padrão se não houver ícone definido
+            folium.Marker(
+                location=coord,
+                icon=folium.Icon(color="blue"),
+                popup=nome
+            ).add_to(mapa)
     
     folium_static(mapa)
     
