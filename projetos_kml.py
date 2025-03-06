@@ -196,7 +196,7 @@ def criar_dashboard_gpon(dados_gpon):
     # Cria o DataFrame para a tabela
     df_tabela = pd.DataFrame(
         dados_tabela,
-        columns=["Subpasta", "Quantidade de Rotas", "Quantidade de Placemarks", "Soma das Distâncias (m)"]
+        columns=["POP", "Quantidade de Rotas", "Quantidade de CTO'S", "Distância (m)"]
     )
     
     # Adiciona a coluna ID
@@ -207,8 +207,8 @@ def criar_dashboard_gpon(dados_gpon):
         "",  # ID (vazio para a linha de total)
         "Total",  # Subpasta
         df_tabela["Quantidade de Rotas"].sum(),
-        df_tabela["Quantidade de Placemarks"].sum(),
-        df_tabela["Soma das Distâncias (m)"].sum()
+        df_tabela["Quantidade de CTO'S"].sum(),
+        df_tabela["Distância (m)"].sum()
     ]
     
     # Define a coluna ID como índice do DataFrame
@@ -272,7 +272,7 @@ if uploaded_file is not None:
     # Cria o DataFrame para a tabela
     df_tabela_pastas = pd.DataFrame(
         dados_tabela_pastas,
-        columns=["Folder", "LineString", "Distância (m)"]
+        columns=["Pasta", "ROTAS LINK", "Distância (m)"]
     )
 
     # Adiciona a coluna ID
