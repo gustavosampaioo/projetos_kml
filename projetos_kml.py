@@ -200,17 +200,21 @@ def criar_dashboard_gpon(dados_gpon):
         columns=["Subpasta", "Quantidade de Rotas", "Quantidade de Placemarks", "Soma das Distâncias (m)"]
     )
     
+    # Adiciona a coluna ID
+    df_tabela.insert(0, "ID", range(1, len(df_tabela) + 1))
+    
     # Adiciona uma linha de total
     df_tabela.loc["Total"] = [
-        "Total",
+        "",  # ID (vazio para a linha de total)
+        "**Total**",  # Subpasta
         df_tabela["Quantidade de Rotas"].sum(),
         df_tabela["Quantidade de Placemarks"].sum(),
         df_tabela["Soma das Distâncias (m)"].sum()
     ]
     
-    # Exibe a tabela
+    # Exibe a tabela sem a coluna de índice do sistema
     st.write("### Tabela de Análise por Subpasta")
-    st.dataframe(df_tabela)
+    st.dataframe(df_tabela.hide_index())
 
 # Configuração do aplicativo Streamlit
 st.title("Calculadora de Distância de Arquivos KML")
