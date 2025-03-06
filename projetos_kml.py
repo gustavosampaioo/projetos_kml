@@ -72,28 +72,30 @@ def processar_gpon(root):
             if primeira_subpasta is not None:
                 nome_primeira_subpasta = primeira_subpasta.name.text if hasattr(primeira_subpasta, 'name') else "Subpasta Desconhecida"
                 
+                # Adiciona o nome da primeira subpasta aos dados
+                dados_gpon[nome_folder]["primeira_subpasta"] = nome_primeira_subpasta
+                dados_gpon[nome_folder]["ctos"] = []
+                
                 # Busca por subpastas que contenham "CTO'S" dentro da primeira subpasta
                 for subpasta in primeira_subpasta.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
                     nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
                     
                     # Filtra apenas subpastas que contêm "CTO'S" no nome
                     if "CTO'S" in nome_subpasta.upper():
-                        dados_subpasta = {"nome": nome_subpasta, "ctos": []}
+                        dados_cto = {"nome": nome_subpasta, "rotas": []}
                         
                         # Processa as rotas dentro da subpasta CTO'S
                         rotas = subpasta.findall(".//{http://www.opengis.net/kml/2.2}Folder")
                         for rota in rotas:
                             nome_rota = rota.name.text if hasattr(rota, 'name') else "Rota Desconhecida"
                             placemarks = rota.findall(".//{http://www.opengis.net/kml/2.2}Placemark")
-                            dados_subpasta["ctos"].append({
+                            dados_cto["rotas"].append({
                                 "nome_rota": nome_rota,
                                 "quantidade_placemarks": len(placemarks)
                             })
                         
                         # Adiciona a subpasta CTO'S aos dados
-                        dados_gpon[nome_folder]["subpastas"].append(dados_subpasta)
-    
-    return dados_gpon
+                        dados_gpon[nome_folder]["ctos"].append
 
 # Função para processar o KML e calcular distâncias
 def processar_kml(caminho_arquivo):
