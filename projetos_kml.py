@@ -183,6 +183,10 @@ def criar_dashboard_gpon(dados_gpon):
         soma_cabos_fo = 0.0
         soma_backbone = 0.0
         
+        # Inicializa listas para armazenar dados das tabelas
+        dados_rotas = []
+        dados_placemarks = []
+        
         # Encontra os dados da GPON selecionada
         for nome_gpon, dados in dados_gpon.items():
             if nome_gpon == gpon_selecionada and "primeiro_nivel" in dados:
@@ -194,52 +198,39 @@ def criar_dashboard_gpon(dados_gpon):
                     if "BACKBONE" in subpasta["nome"].upper():
                         soma_backbone += sum(distancia for _, distancia in subpasta["linestrings"])
                     
-                    # Exibe os dados da subpasta selecionada
-                    if subpasta["nome"] == subpasta_nome:
-                        # Cria um DataFrame para as contagens de Rotas e Placemarks
-                        dados_grafico = []
-                        if "ctos" in subpasta:
-                            for cto in subpasta["ctos"]:
-                                if "rotas" in cto:
-                                    for rota in cto["rotas"]:
-                                        dados_grafico.append({
-                                            "CTO": cto["nome"],
-                                            "Rota": rota["nome_rota"],
-                                            "Quantidade Placemarks": rota["quantidade_placemarks"]
-                                        })
+                    # Coleta dados de Rotas e Placemarks
+                    if "ctos" in subpasta:
+                        total_rotas = 0
+                        total_placemarks = 0
+                        for cto in subpasta["ctos"]:
+                            if "rotas" in cto:
+                                total_rotas += len(cto["rotas"])
+                                for rota in cto["rotas"]:
+                                    total_placemarks += rota["quantidade_placemarks"]
                         
-                        # Converte para DataFrame
-                        df = pd.DataFrame(dados_grafico)
-                        
-                        # Exibe o DataFrame
-                        st.write("### Dados das Rotas e Placemarks")
-                        st.dataframe(df)
-                        
-                        # Cria gráficos
-                        if not df.empty:
-                            st.write("### Gráfico de Quantidade de Placemarks por Rota")
-                            fig = px.bar(
-                                df,
-                                x="Rota",
-                                y="Quantidade Placemarks",
-                                color="CTO",
-                                title=f"Quantidade de Placemarks por Rota - {subpasta_nome}"
-                            )
-                            st.plotly_chart(fig)
-                            
-                            st.write("### Gráfico de Quantidade de Rotas por CTO")
-                            fig2 = px.bar(
-                                df.groupby("CTO").size().reset_index(name="Quantidade Rotas"),
-                                x="CTO",
-                                y="Quantidade Rotas",
-                                title=f"Quantidade de Rotas por CTO - {subpasta_nome}"
-                            )
-                            st.plotly_chart(fig2)
-                        
-                        # Exibe a soma das distâncias das LineStrings da subpasta selecionada
-                        if "linestrings" in subpasta:
-                            soma_distancia = sum(distancia for _, distancia in subpasta["linestrings"])
-                            st.write(f"**Soma das distâncias das LineStrings na subpasta '{subpasta_nome}': {soma_distancia:.2f} metros**")
+                        # Adiciona os dados da subpasta às listas
+                        dados_rotas.append([subpasta["nome"], total_rotas])
+                        dados_placemarks.append([subpasta["nome"], total_placemarks])
+                    
+                    # Exibe a soma das distâncias das LineStrings da subpasta selecionada
+                    if subpasta["nome"] == subpasta_nome and "linestrings" in subpasta:
+                        soma_distancia = sum(distancia for _, distancia in subpasta["linestrings"])
+                        st.write(f"**Soma das distâncias das LineStrings na subpasta '{subpasta_nome}': {soma_distancia:.2f} metros**")
+                
+                # Cria DataFrames para as tabelas
+                df_rotas = pd.DataFrame(dados_rotas, columns=["Subpasta", "Quantidade de Rotas"])
+                df_placemarks = pd.DataFrame(dados_placemarks, columns=["Subpasta", "Quantidade de Placemarks"])
+                
+                # Adiciona totais às tabelas
+                df_rotas.loc["Total"] = ["Total", df_rotas["Quantidade de Rotas"].sum()]
+                df_placemarks.loc["Total"] = ["Total", df_placemarks["Quantidade de Placemarks"].sum()]
+                
+                # Exibe as tabelas
+                st.write("### Quantidade de Rotas por Subpasta")
+                st.dataframe(df_rotas)
+                
+                st.write("### Quantidade de Placemarks por Subpasta")
+                st.dataframe(df_placemarks)
                 
                 # Exibe as somas separadas para "CABOS FO" e "BACKBONE"
                 st.write(f"**Soma das distâncias das LineStrings em 'CABOS FO': {soma_cabos_fo:.2f} metros**")
