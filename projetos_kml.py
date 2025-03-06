@@ -211,13 +211,6 @@ def criar_dashboard_gpon(dados_gpon):
     # Exibe a tabela
     st.write("### Tabela de Análise por Subpasta")
     st.dataframe(df_tabela)
-    
-    # Exibe as somas separadas para "CABOS FO" e "BACKBONE"
-    soma_cabos_fo = df_tabela[df_tabela["Subpasta"].str.contains("CABOS FO", case=False, na=False)]["Soma das Distâncias (m)"].sum()
-    soma_backbone = df_tabela[df_tabela["Subpasta"].str.contains("BACKBONE", case=False, na=False)]["Soma das Distâncias (m)"].sum()
-    
-    st.write(f"**Soma das distâncias das LineStrings em 'CABOS FO': {soma_cabos_fo:.2f} metros**")
-    st.write(f"**Soma das distâncias das LineStrings em 'BACKBONE': {soma_backbone:.2f} metros**")
 
 # Configuração do aplicativo Streamlit
 st.title("Calculadora de Distância de Arquivos KML")
