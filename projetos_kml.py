@@ -57,7 +57,6 @@ def processar_folder_link(folder, estilos):
     return distancia_folder, dados, coordenadas_folder
 
 # Função para processar pastas GPON e suas subpastas
-# Função para processar pastas GPON e suas subpastas
 def processar_gpon(root):
     dados_gpon = {}
     
@@ -72,12 +71,13 @@ def processar_gpon(root):
             def processar_subpastas(folder, dados_subpastas):
                 for subpasta in folder.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
                     nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
-                    dados_subpasta = {"nome": nome_subpasta, "ctos": []}
                     
+                    # Filtra apenas subpastas que contêm "CTO'S" no nome
                     if "CTO'S" in nome_subpasta.upper():
-                        rotas = subpasta.findall(".//{http://www.opengis.net/kml/2.2}Folder")
-                        dados_subpasta["ctos"] = []
+                        dados_subpasta = {"nome": nome_subpasta, "ctos": []}
                         
+                        # Processa as rotas dentro da subpasta CTO'S
+                        rotas = subpasta.findall(".//{http://www.opengis.net/kml/2.2}Folder")
                         for rota in rotas:
                             nome_rota = rota.name.text if hasattr(rota, 'name') else "Rota Desconhecida"
                             placemarks = rota.findall(".//{http://www.opengis.net/kml/2.2}Placemark")
@@ -85,8 +85,10 @@ def processar_gpon(root):
                                 "nome_rota": nome_rota,
                                 "quantidade_placemarks": len(placemarks)
                             })
+                        
+                        # Adiciona a subpasta CTO'S aos dados
+                        dados_subpastas.append(dados_subpasta)
                     
-                    dados_subpastas.append(dados_subpasta)
                     # Chama recursivamente para processar subpastas aninhadas
                     processar_subpastas(subpasta, dados_subpastas)
             
