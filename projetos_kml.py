@@ -183,7 +183,7 @@ if uploaded_file is not None:
             st.write(f"**Subpasta: {subpasta['nome']}**")
             
             if "CTO'S" in subpasta["nome"].upper():
-                st.write(f"Quantidade de rotas: {len(subpasta['ctos']}")
+                st.write(f"Quantidade de rotas: {len(subpasta['ctos'])}")
                 
                 for cto in subpasta["ctos"]:
                     st.write(f"- Rota: {cto['nome_rota']}")
