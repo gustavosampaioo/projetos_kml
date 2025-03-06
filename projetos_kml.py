@@ -219,8 +219,8 @@ def criar_dashboard_gpon(dados_gpon):
     st.dataframe(df_tabela)
 
 # Configuração do aplicativo Streamlit
-st.title("Calculadora de Distância de Arquivos KML")
-st.write("Este aplicativo calcula a distância total das LineStrings dentro de Folders contendo 'LINK' no nome e exibe os dados organizados por pasta.")
+st.title("Analisador de projetos de fibra ótica")
+st.write("Este aplicativo analisa um arquivo no formato .kml e imprime informações bem dinâmicas e interativas sobre o projetos de fibra ótica")
 
 # Upload do arquivo KML
 uploaded_file = st.file_uploader("Carregue um arquivo KML", type=["kml"])
