@@ -256,26 +256,30 @@ if uploaded_file is not None:
     # Exibe tabelas para pastas LINK
     st.subheader("Tabela de Análise por Pasta")
     dados_tabela_pastas = []
-    
+
+    # Itera sobre as pastas e coleta os dados
     for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
-        df = pd.DataFrame(dados, columns=["LineString", "Distância (m)"])
-        dados_tabela_pastas.append([nome_folder, distancia_folder])
-        st.write(f"**Folder: {nome_folder}**")
-        st.dataframe(df)
-        st.write(f"**Soma da distância no folder '{nome_folder}': {distancia_folder:.2f} metros**")
-        st.markdown("---")
-    
-    # Adiciona uma linha de total na tabela de pastas
+        # Adiciona os dados de cada linha da pasta
+        for linha in dados:
+            dados_tabela_pastas.append([nome_folder, linha[0], linha[1]])  # [Folder, LineString, Distância]
+        
+        # Adiciona uma linha de subtotal para a pasta atual
+        dados_tabela_pastas.append([nome_folder, "**Subtotal**", distancia_folder])
+
+    # Cria o DataFrame para a tabela
     df_tabela_pastas = pd.DataFrame(
         dados_tabela_pastas,
-        columns=["Folder", "Distância Total (m)"]
+        columns=["Folder", "LineString", "Distância (m)"]
     )
+
+    # Adiciona uma linha de total ao final da tabela
     df_tabela_pastas.loc["Total"] = [
-        "Total",
-        df_tabela_pastas["Distância Total (m)"].sum()
+        "**Total**",  # Folder
+        "",  # LineString (vazio para a linha de total)
+        df_tabela_pastas[df_tabela_pastas["LineString"] != "**Subtotal**"]["Distância (m)"].sum()  # Soma total
     ]
-    
-    st.write("### Tabela de Distâncias por Pasta")
+
+    # Exibe a tabela
     st.dataframe(df_tabela_pastas)
     
     # Exibe o dashboard para pastas GPON
