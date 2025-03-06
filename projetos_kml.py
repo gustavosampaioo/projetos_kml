@@ -56,6 +56,34 @@ def processar_folder_link(folder, estilos):
     
     return distancia_folder, dados, coordenadas_folder
 
+# Função para buscar recursivamente por pastas "CTO'S"
+def buscar_ctos(folder):
+    ctos = []
+    
+    for subpasta in folder.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
+        nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
+        
+        # Se a subpasta contiver "CTO'S" no nome, adiciona à lista
+        if "CTO'S" in nome_subpasta.upper():
+            dados_cto = {"nome": nome_subpasta, "rotas": []}
+            
+            # Processa as rotas dentro da subpasta CTO'S
+            rotas = subpasta.findall(".//{http://www.opengis.net/kml/2.2}Folder")
+            for rota in rotas:
+                nome_rota = rota.name.text if hasattr(rota, 'name') else "Rota Desconhecida"
+                placemarks = rota.findall(".//{http://www.opengis.net/kml/2.2}Placemark")
+                dados_cto["rotas"].append({
+                    "nome_rota": nome_rota,
+                    "quantidade_placemarks": len(placemarks)
+                })
+            
+            ctos.append(dados_cto)
+        
+        # Busca recursivamente por mais pastas "CTO'S" dentro da subpasta atual
+        ctos.extend(buscar_ctos(subpasta))
+    
+    return ctos
+
 # Função para processar pastas GPON e suas subpastas
 def processar_gpon(root):
     dados_gpon = {}
@@ -72,28 +100,7 @@ def processar_gpon(root):
                 nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
                 
                 # Dados da subpasta do primeiro nível
-                dados_subpasta = {"nome": nome_subpasta, "ctos": []}
-                
-                # Busca por subpastas que contenham "CTO'S" dentro da subpasta do primeiro nível
-                for cto_folder in subpasta.findall("{http://www.opengis.net/kml/2.2}Folder"):
-                    nome_cto = cto_folder.name.text if hasattr(cto_folder, 'name') else "CTO Desconhecido"
-                    
-                    # Filtra apenas subpastas que contêm "CTO'S" no nome
-                    if "CTO'S" in nome_cto.upper():
-                        dados_cto = {"nome": nome_cto, "rotas": []}
-                        
-                        # Processa as rotas dentro da subpasta CTO'S
-                        rotas = cto_folder.findall("{http://www.opengis.net/kml/2.2}Folder")
-                        for rota in rotas:
-                            nome_rota = rota.name.text if hasattr(rota, 'name') else "Rota Desconhecida"
-                            placemarks = rota.findall(".//{http://www.opengis.net/kml/2.2}Placemark")
-                            dados_cto["rotas"].append({
-                                "nome_rota": nome_rota,
-                                "quantidade_placemarks": len(placemarks)
-                            })
-                        
-                        # Adiciona a subpasta CTO'S aos dados da subpasta do primeiro nível
-                        dados_subpasta["ctos"].append(dados_cto)
+                dados_subpasta = {"nome": nome_subpasta, "ctos": buscar_ctos(subpasta)}
                 
                 # Adiciona a subpasta do primeiro nível aos dados da pasta GPON
                 dados_gpon[nome_folder]["primeiro_nivel"].append(dados_subpasta)
