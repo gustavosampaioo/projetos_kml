@@ -316,10 +316,6 @@ if uploaded_file is not None:
     # Processa o KML
     distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon = processar_kml("temp.kml")
     
-    # Exibe o mapa e outras informações
-    st.subheader("Mapa do Link entre Cidades")
-    mapa = folium.Map(location=[-5.0892, -42.8016], zoom_start=5, tiles="Esri WorldImagery")
-    
     # Adiciona LineStrings e marcadores ao mapa
     for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
         for nome_placemark, coordinates, color in coordenadas_folder:
