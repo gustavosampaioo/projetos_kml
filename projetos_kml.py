@@ -340,8 +340,6 @@ if uploaded_file is not None:
     
     folium_static(mapa)
     
-    st.success(f"Distância total das Folders 'LINK': {distancia_total:.2f} metros")
-    
     # Exibe tabelas para pastas LINK
     st.subheader("Quantidade de Fibra Ótica projetada - LINK")
     dados_tabela_pastas = []
