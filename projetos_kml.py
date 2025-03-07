@@ -325,12 +325,16 @@ if uploaded_file is not None:
     # Adiciona LineStrings e marcadores ao mapa
     for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
         for nome_placemark, coordinates, color in coordenadas_folder:
+            # Calcula a distância da LineString
+            distancia = calcular_distancia_linestring(coordinates)
+            
+            # Adiciona a LineString ao mapa com a distância no tooltip
             folium.PolyLine(
                 coordinates,
                 color=color,
                 weight=3,
                 opacity=0.7,
-                tooltip=f"{nome_folder} - {nome_placemark}"
+                tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"  # Exibe a distância
             ).add_to(mapa)
     
     # Adiciona marcadores das cidades com tamanho menor e exibe o nome diretamente no mapa
