@@ -331,7 +331,7 @@ if uploaded_file is not None:
     for nome, coord in cidades_coords:
         folium.Marker(
             location=coord,
-            icon=folium.Icon(icon="home", color="green", icon_size=(10, 10)),  # Ajusta o tamanho do ícone
+            icon=folium.Icon(icon="home", color="green", icon_size=(10, 10)),  # Parêntese extra aqui
             tooltip=nome  # Exibe o nome do placemark diretamente no mapa
         ).add_to(mapa)
     
