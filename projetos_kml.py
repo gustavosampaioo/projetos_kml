@@ -316,6 +316,12 @@ if uploaded_file is not None:
     # Processa o KML
     distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon = processar_kml("temp.kml")
     
+    # Exibe o mapa e outras informações
+    st.subheader("Mapa do Link entre Cidades")
+    
+    # Cria o mapa Folium
+    mapa = folium.Map(location=[-5.0892, -42.8016], zoom_start=5, tiles="Esri WorldImagery")
+    
     # Adiciona LineStrings e marcadores ao mapa
     for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
         for nome_placemark, coordinates, color in coordenadas_folder:
@@ -327,13 +333,15 @@ if uploaded_file is not None:
                 tooltip=f"{nome_folder} - {nome_placemark}"
             ).add_to(mapa)
     
+    # Adiciona marcadores das cidades com tamanho menor e exibe o nome diretamente no mapa
     for nome, coord in cidades_coords:
         folium.Marker(
             location=coord,
-            icon=folium.Icon(icon="home", color="green"),
-            popup=nome
+            icon=folium.Icon(icon="home", color="green", icon_size=(10, 10)),  # Ajusta o tamanho do ícone
+            tooltip=nome  # Exibe o nome do placemark diretamente no mapa
         ).add_to(mapa)
     
+    # Exibe o mapa no Streamlit
     folium_static(mapa)
     
     # Exibe tabelas para pastas LINK
@@ -381,4 +389,4 @@ if uploaded_file is not None:
     criar_dashboard_gpon(dados_gpon)
     
     # Exibe a tabela interativa
-    criar_tabela_interativa_gpon(dados_gpon)  # Certifique-se de que dados_gpon está definido
+    criar_tabela_interativa_gpon(dados_gpon)
