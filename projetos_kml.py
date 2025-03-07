@@ -13,7 +13,7 @@ def calcular_distancia_linestring(coordinates):
         ponto_atual = coordinates[i]
         proximo_ponto = coordinates[i + 1]
         distancia_total += geodesic(ponto_atual, proximo_ponto).meters
-    return round(distancia_total, 0)  # Arredonda para 2 casas decimais
+    return round(distancia_total, 0)  # Arredonda para 0 casas decimais
 
 # Função para extrair estilos do KML (LineStyle)
 def extrair_estilos(root):
