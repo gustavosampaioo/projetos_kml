@@ -237,19 +237,34 @@ def criar_tabela_interativa_gpon(dados_gpon):
                 if subpasta["nome"] == selecionado:
                     st.write(f"### Informações para: {selecionado}")
                     
-                    # Exibe as rotas e CTO's dentro da subpasta selecionada
-                    if "ctos" in subpasta:
-                        st.write("#### Rotas e CTO's:")
-                        for cto in subpasta["ctos"]:
-                            st.write(f"**CTO: {cto['nome']}**")
-                            for rota in cto["rotas"]:
-                                st.write(f"- Rota: {rota['nome_rota']}, Placemarks: {rota['quantidade_placemarks']}")
+                    # Inicializa listas para armazenar dados da tabela
+                    dados_tabela = []
                     
-                    # Exibe as LineStrings (distâncias) dentro da subpasta selecionada
-                    if "linestrings" in subpasta:
-                        st.write("#### Distâncias das LineStrings:")
-                        for nome, distancia in subpasta["linestrings"]:
-                            st.write(f"- {nome}: {distancia:.2f} metros")
+                    # Coleta dados de Rotas e CTO's
+                    if "ctos" in subpasta:
+                        for cto in subpasta["ctos"]:
+                            if "rotas" in cto:
+                                for rota in cto["rotas"]:
+                                    dados_tabela.append([
+                                        cto["nome"],  # Nome do CTO
+                                        rota["nome_rota"],  # Nome da Rota
+                                        rota["quantidade_placemarks"]  # Quantidade de Placemarks
+                                    ])
+                    
+                    # Cria o DataFrame para a tabela
+                    df_tabela = pd.DataFrame(
+                        dados_tabela,
+                        columns=["CTO", "Rota", "Quantidade de Placemarks"]
+                    )
+                    
+                    # Adiciona a coluna ID
+                    df_tabela.insert(0, "ID", range(1, len(df_tabela) + 1))
+                    
+                    # Define a coluna ID como índice do DataFrame
+                    df_tabela.set_index("ID", inplace=True)
+                    
+                    # Exibe a tabela
+                    st.dataframe(df_tabela)
 
 
 # Configuração do aplicativo Streamlit
