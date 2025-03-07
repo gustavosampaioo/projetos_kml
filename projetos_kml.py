@@ -251,8 +251,6 @@ def criar_tabela_interativa_gpon(dados_gpon):
                         for nome, distancia in subpasta["linestrings"]:
                             st.write(f"- {nome}: {distancia:.2f} metros")
 
-# Adiciona a tabela interativa ao dashboard GPON
-criar_tabela_interativa_gpon(dados_gpon)
 
 # Configuração do aplicativo Streamlit
 st.title("Analisador de Projetos")
