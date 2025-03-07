@@ -237,34 +237,60 @@ def criar_tabela_interativa_gpon(dados_gpon):
                 if subpasta["nome"] == selecionado:
                     st.write(f"### Informações para: {selecionado}")
                     
-                    # Inicializa listas para armazenar dados da tabela
-                    dados_tabela = []
+                    # Inicializa listas para armazenar dados das tabelas
+                    dados_tabela_rotas = []  # Tabela de Rotas e CTO's
+                    dados_tabela_quantidade_rotas = []  # Tabela de Quantidade de Rotas por CTO
                     
                     # Coleta dados de Rotas e CTO's
                     if "ctos" in subpasta:
                         for cto in subpasta["ctos"]:
+                            quantidade_rotas = 0
                             if "rotas" in cto:
                                 for rota in cto["rotas"]:
-                                    dados_tabela.append([
+                                    dados_tabela_rotas.append([
                                         cto["nome"],  # Nome do CTO
                                         rota["nome_rota"],  # Nome da Rota
                                         rota["quantidade_placemarks"]  # Quantidade de Placemarks
                                     ])
+                                    quantidade_rotas += 1
+                            
+                            # Adiciona a quantidade de rotas por CTO
+                            dados_tabela_quantidade_rotas.append([
+                                cto["nome"],  # Nome do CTO
+                                quantidade_rotas  # Quantidade de Rotas
+                            ])
                     
-                    # Cria o DataFrame para a tabela
-                    df_tabela = pd.DataFrame(
-                        dados_tabela,
+                    # Cria o DataFrame para a tabela de Rotas e CTO's
+                    df_tabela_rotas = pd.DataFrame(
+                        dados_tabela_rotas,
                         columns=["CTO", "Rota", "Quantidade de Placemarks"]
                     )
                     
                     # Adiciona a coluna ID
-                    df_tabela.insert(0, "ID", range(1, len(df_tabela) + 1))
+                    df_tabela_rotas.insert(0, "ID", range(1, len(df_tabela_rotas) + 1))
                     
                     # Define a coluna ID como índice do DataFrame
-                    df_tabela.set_index("ID", inplace=True)
+                    df_tabela_rotas.set_index("ID", inplace=True)
                     
-                    # Exibe a tabela
-                    st.dataframe(df_tabela)
+                    # Exibe a tabela de Rotas e CTO's
+                    st.write("#### Rotas e CTO's")
+                    st.dataframe(df_tabela_rotas)
+                    
+                    # Cria o DataFrame para a tabela de Quantidade de Rotas por CTO
+                    df_tabela_quantidade_rotas = pd.DataFrame(
+                        dados_tabela_quantidade_rotas,
+                        columns=["CTO", "Quantidade de Rotas"]
+                    )
+                    
+                    # Adiciona a coluna ID
+                    df_tabela_quantidade_rotas.insert(0, "ID", range(1, len(df_tabela_quantidade_rotas) + 1))
+                    
+                    # Define a coluna ID como índice do DataFrame
+                    df_tabela_quantidade_rotas.set_index("ID", inplace=True)
+                    
+                    # Exibe a tabela de Quantidade de Rotas por CTO
+                    st.write("#### Quantidade de Rotas por CTO")
+                    st.dataframe(df_tabela_quantidade_rotas)
 
 
 # Configuração do aplicativo Streamlit
