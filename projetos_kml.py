@@ -346,19 +346,41 @@ if uploaded_file is not None:
     st.subheader("Quantidade de Fibra Ótica projetada - LINK")
     dados_tabela_pastas = []
     
+    # Dicionário para armazenar subtotais por pasta
+    subtotais_pastas = {}
+    
     for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
+        subtotal_pasta = 0.0
         for linha in dados:
             dados_tabela_pastas.append([nome_folder, linha[0], linha[1]])
+            subtotal_pasta += linha[1]
+        
+        # Armazena o subtotal da pasta
+        subtotais_pastas[nome_folder] = subtotal_pasta
     
+    # Adiciona as linhas de subtotal por pasta
+    for nome_folder, subtotal in subtotais_pastas.items():
+        dados_tabela_pastas.append([nome_folder, "Subtotal", subtotal])
+    
+    # Cria o DataFrame
     df_tabela_pastas = pd.DataFrame(
         dados_tabela_pastas,
         columns=["Pasta", "ROTAS LINK", "Distância (m)"]
     )
     
+    # Adiciona a coluna ID
     df_tabela_pastas.insert(0, "ID", range(1, len(df_tabela_pastas) + 1))
-    total_distancia = df_tabela_pastas["Distância (m)"].sum()
+    
+    # Calcula o total geral
+    total_distancia = df_tabela_pastas[df_tabela_pastas["ROTAS LINK"] != "Subtotal"]["Distância (m)"].sum()
+    
+    # Adiciona a linha de total geral
     df_tabela_pastas.loc["Total"] = ["", "Total", "", total_distancia]
+    
+    # Define a coluna ID como índice do DataFrame
     df_tabela_pastas.set_index("ID", inplace=True)
+    
+    # Exibe a tabela
     st.dataframe(df_tabela_pastas)
     
     # Exibe o dashboard GPON
