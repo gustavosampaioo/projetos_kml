@@ -261,18 +261,19 @@ st.write("Este aplicativo analisa um arquivo no formato .kml e imprime informaç
 # Upload do arquivo KML
 uploaded_file = st.file_uploader("Carregue um arquivo KML", type=["kml"])
 
-# Processamento do arquivo KML
 if uploaded_file is not None:
+    # Salva o arquivo temporariamente
     with open("temp.kml", "wb") as f:
         f.write(uploaded_file.getbuffer())
     
+    # Processa o KML
     distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon = processar_kml("temp.kml")
-
-    # Cria o mapa
+    
+    # Exibe o mapa e outras informações
     st.subheader("Mapa do Link entre Cidades")
     mapa = folium.Map(location=[-5.0892, -42.8016], zoom_start=5, tiles="Esri WorldImagery")
     
-    # Adiciona LineStrings
+    # Adiciona LineStrings e marcadores ao mapa
     for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
         for nome_placemark, coordinates, color in coordenadas_folder:
             folium.PolyLine(
@@ -283,11 +284,10 @@ if uploaded_file is not None:
                 tooltip=f"{nome_folder} - {nome_placemark}"
             ).add_to(mapa)
     
-    # Adiciona marcadores para CIDADES (com ícone de casa)
     for nome, coord in cidades_coords:
         folium.Marker(
             location=coord,
-            icon=folium.Icon(icon="home", color="green"),  # Ícone de casa
+            icon=folium.Icon(icon="home", color="green"),
             popup=nome
         ).add_to(mapa)
     
@@ -296,38 +296,26 @@ if uploaded_file is not None:
     st.success(f"Distância total das Folders 'LINK': {distancia_total:.2f} metros")
     
     # Exibe tabelas para pastas LINK
-    st.subheader("Quantitade de Fibra Ótica projetada - LINK")
+    st.subheader("Quantidade de Fibra Ótica projetada - LINK")
     dados_tabela_pastas = []
-
-    # Itera sobre as pastas e coleta os dados
+    
     for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
-        # Adiciona os dados de cada linha da pasta
         for linha in dados:
-            dados_tabela_pastas.append([nome_folder, linha[0], linha[1]])  # [Folder, LineString, Distância]
-
-    # Cria o DataFrame para a tabela
+            dados_tabela_pastas.append([nome_folder, linha[0], linha[1]])
+    
     df_tabela_pastas = pd.DataFrame(
         dados_tabela_pastas,
         columns=["Pasta", "ROTAS LINK", "Distância (m)"]
     )
-
-    # Adiciona a coluna ID
+    
     df_tabela_pastas.insert(0, "ID", range(1, len(df_tabela_pastas) + 1))
-
-    # Adiciona uma linha de total ao final da tabela
     total_distancia = df_tabela_pastas["Distância (m)"].sum()
-    df_tabela_pastas.loc["Total"] = [
-        "",  # ID (vazio para a linha de total)
-        "Total",  # Folder
-        "",  # LineString (vazio para a linha de total)
-        total_distancia  # Soma total
-    ]
-
-    # Define a coluna ID como índice do DataFrame
+    df_tabela_pastas.loc["Total"] = ["", "Total", "", total_distancia]
     df_tabela_pastas.set_index("ID", inplace=True)
-
-    # Exibe a tabela
     st.dataframe(df_tabela_pastas)
     
-    # Exibe o dashboard para pastas GPON
+    # Exibe o dashboard GPON
     criar_dashboard_gpon(dados_gpon)
+    
+    # Exibe a tabela interativa
+    criar_tabela_interativa_gpon(dados_gpon)  # Certifique-se de que dados_gpon está definido
