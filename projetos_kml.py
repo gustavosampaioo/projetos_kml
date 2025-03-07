@@ -196,7 +196,7 @@ def criar_dashboard_gpon(dados_gpon):
     # Cria o DataFrame para a tabela
     df_tabela = pd.DataFrame(
         dados_tabela,
-        columns=["POP", "Quantidade de Rotas", "Quantidade de CTO'S", "Distância (m)"]
+        columns=["POP", "Rotas", "CTO'S", "Fibra Ótica (metros)"]
     )
     
     # Adiciona a coluna ID
@@ -206,9 +206,9 @@ def criar_dashboard_gpon(dados_gpon):
     df_tabela.loc["Total"] = [
         "",  # ID (vazio para a linha de total)
         "Total",  # Subpasta
-        df_tabela["Quantidade de Rotas"].sum(),
-        df_tabela["Quantidade de CTO'S"].sum(),
-        df_tabela["Distância (m)"].sum()
+        df_tabela["Rotas"].sum(),
+        df_tabela["CTO'S"].sum(),
+        df_tabela["Fibra Ótica (metros)"].sum()
     ]
     
     # Define a coluna ID como índice do DataFrame
@@ -228,14 +228,14 @@ def criar_tabela_interativa_gpon(dados_gpon):
                 opcoes_primeiro_nivel.append(subpasta["nome"])
     
     # Adiciona um selectbox para selecionar o primeiro nível
-    selecionado = st.selectbox("Selecione o primeiro nível:", opcoes_primeiro_nivel)
+    selecionado = st.selectbox("Selecione o POP para análise:", opcoes_primeiro_nivel)
     
     # Encontra os dados correspondentes ao primeiro nível selecionado
     for nome_gpon, dados in dados_gpon.items():
         if "primeiro_nivel" in dados:
             for subpasta in dados["primeiro_nivel"]:
                 if subpasta["nome"] == selecionado:
-                    st.write(f"### Informações para: {selecionado}")
+                    st.write(f"### Informações de: {selecionado}")
                     
                     # Inicializa listas para armazenar dados das tabelas
                     dados_tabela_rotas = []  # Tabela de Rotas e CTO's
@@ -263,34 +263,34 @@ def criar_tabela_interativa_gpon(dados_gpon):
                     # Cria o DataFrame para a tabela de Quantidade de Rotas por CTO
                     df_tabela_quantidade_rotas = pd.DataFrame(
                         dados_tabela_quantidade_rotas,
-                        columns=["CTO", "Quantidade de Rotas"]
+                        columns=["Projeto", "Rotas"]
                     )
                     
                     # Adiciona a coluna ID
                     df_tabela_quantidade_rotas.insert(0, "ID", range(1, len(df_tabela_quantidade_rotas) + 1))
                     
                     # Adiciona uma linha de total
-                    total_rotas = df_tabela_quantidade_rotas["Quantidade de Rotas"].sum()
+                    total_rotas = df_tabela_quantidade_rotas["Rotas"].sum()
                     df_tabela_quantidade_rotas.loc["Total"] = ["", "Total", total_rotas]
                     
                     # Define a coluna ID como índice do DataFrame
                     df_tabela_quantidade_rotas.set_index("ID", inplace=True)
                     
                     # Exibe a tabela de Quantidade de Rotas por CTO
-                    st.write("#### Quantidade de Rotas por CTO")
+                    st.write("#### Quantidade de Rotas por projeto")
                     st.dataframe(df_tabela_quantidade_rotas)
                     
                     # Cria o DataFrame para a tabela de Rotas e CTO's
                     df_tabela_rotas = pd.DataFrame(
                         dados_tabela_rotas,
-                        columns=["CTO", "Rota", "Quantidade de Placemarks"]
+                        columns=["Projeto", "Rota", "CTO'S"]
                     )
                     
                     # Adiciona a coluna ID
                     df_tabela_rotas.insert(0, "ID", range(1, len(df_tabela_rotas) + 1))
                     
                     # Adiciona uma linha de total
-                    total_placemarks = df_tabela_rotas["Quantidade de Placemarks"].sum()
+                    total_placemarks = df_tabela_rotas["CTO'S"].sum()
                     df_tabela_rotas.loc["Total"] = ["", "Total", "", total_placemarks]
                     
                     # Define a coluna ID como índice do DataFrame
