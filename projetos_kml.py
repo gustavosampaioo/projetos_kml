@@ -327,12 +327,11 @@ if uploaded_file is not None:
                 tooltip=f"{nome_folder} - {nome_placemark}"
             ).add_to(mapa)
     
-    # Adiciona marcadores das cidades com tamanho menor e exibe o nome diretamente no mapa
     for nome, coord in cidades_coords:
         folium.Marker(
             location=coord,
-            icon=folium.Icon(icon="home", color="green", icon_size=(10, 10)),  # Parêntese extra aqui
-            tooltip=nome  # Exibe o nome do placemark diretamente no mapa
+            icon=folium.Icon(icon="home", color="green"),
+            popup=nome
         ).add_to(mapa)
     
     folium_static(mapa)
