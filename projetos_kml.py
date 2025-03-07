@@ -316,26 +316,26 @@ if uploaded_file is not None:
     # Processa o KML
     distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon = processar_kml("temp.kml")
     
-# Adiciona LineStrings e marcadores ao mapa
-for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
-    for nome_placemark, coordinates, color in coordenadas_folder:
-        folium.PolyLine(
-            coordinates,
-            color=color,
-            weight=3,
-            opacity=0.7,
-            tooltip=f"{nome_folder} - {nome_placemark}"
+    # Adiciona LineStrings e marcadores ao mapa
+    for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
+        for nome_placemark, coordinates, color in coordenadas_folder:
+            folium.PolyLine(
+                coordinates,
+                color=color,
+                weight=3,
+                opacity=0.7,
+                tooltip=f"{nome_folder} - {nome_placemark}"
+            ).add_to(mapa)
+    
+    # Adiciona marcadores das cidades com tamanho menor e exibe o nome diretamente no mapa
+    for nome, coord in cidades_coords:
+        folium.Marker(
+            location=coord,
+            icon=folium.Icon(icon="home", color="green", icon_size=(10, 10)),  # Ajusta o tamanho do ícone
+            tooltip=nome  # Exibe o nome do placemark diretamente no mapa
         ).add_to(mapa)
-
-# Adiciona marcadores das cidades com tamanho menor e exibe o nome diretamente no mapa
-for nome, coord in cidades_coords:
-    folium.Marker(
-        location=coord,
-        icon=folium.Icon(icon="home", color="green", icon_size=(10, 10)),  # Ajusta o tamanho do ícone
-        tooltip=nome  # Exibe o nome do placemark diretamente no mapa
-    ).add_to(mapa)
-
-folium_static(mapa)
+    
+    folium_static(mapa)
     
     # Exibe tabelas para pastas LINK
     st.subheader("Quantidade de Fibra Ótica projetada - LINK")
