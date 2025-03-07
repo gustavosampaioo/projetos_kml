@@ -218,6 +218,42 @@ def criar_dashboard_gpon(dados_gpon):
     st.write("### GPON - Análise Rotas, CTO'S, Fibra Ótica")
     st.dataframe(df_tabela)
 
+# Função para criar uma tabela interativa com seleção de primeiro nível
+def criar_tabela_interativa_gpon(dados_gpon):
+    # Cria uma lista de opções para o selectbox (primeiro nível)
+    opcoes_primeiro_nivel = []
+    for nome_gpon, dados in dados_gpon.items():
+        if "primeiro_nivel" in dados:
+            for subpasta in dados["primeiro_nivel"]:
+                opcoes_primeiro_nivel.append(subpasta["nome"])
+    
+    # Adiciona um selectbox para selecionar o primeiro nível
+    selecionado = st.selectbox("Selecione o primeiro nível:", opcoes_primeiro_nivel)
+    
+    # Encontra os dados correspondentes ao primeiro nível selecionado
+    for nome_gpon, dados in dados_gpon.items():
+        if "primeiro_nivel" in dados:
+            for subpasta in dados["primeiro_nivel"]:
+                if subpasta["nome"] == selecionado:
+                    st.write(f"### Informações para: {selecionado}")
+                    
+                    # Exibe as rotas e CTO's dentro da subpasta selecionada
+                    if "ctos" in subpasta:
+                        st.write("#### Rotas e CTO's:")
+                        for cto in subpasta["ctos"]:
+                            st.write(f"**CTO: {cto['nome']}**")
+                            for rota in cto["rotas"]:
+                                st.write(f"- Rota: {rota['nome_rota']}, Placemarks: {rota['quantidade_placemarks']}")
+                    
+                    # Exibe as LineStrings (distâncias) dentro da subpasta selecionada
+                    if "linestrings" in subpasta:
+                        st.write("#### Distâncias das LineStrings:")
+                        for nome, distancia in subpasta["linestrings"]:
+                            st.write(f"- {nome}: {distancia:.2f} metros")
+
+# Adiciona a tabela interativa ao dashboard GPON
+criar_tabela_interativa_gpon(dados_gpon)
+
 # Configuração do aplicativo Streamlit
 st.title("Analisador de Projetos")
 st.write("Este aplicativo analisa um arquivo no formato .kml e imprime informações bem dinâmicas e interativas sobre o projetos de fibra ótica")
