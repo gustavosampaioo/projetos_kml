@@ -36,15 +36,24 @@ def processar_folder_link(folder, estilos):
     dados = []
     coordenadas_folder = []
     
+    # Verifica se o nome da pasta contém "LINK PARCEIROS"
+    nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
+    is_link_parceiros = "LINK PARCEIROS" in nome_folder.upper()
+    
     for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
         nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
-        color = "blue"
+        color = "blue"  # Cor padrão
         
-        style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
-        if style_url is not None:
-            style_id = style_url.text.strip().lstrip("#")
-            if style_id in estilos:
-                color = estilos[style_id]
+        # Se for uma pasta "LINK PARCEIROS", define a cor como vermelha
+        if is_link_parceiros:
+            color = "red"
+        else:
+            # Caso contrário, usa a cor definida no estilo
+            style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
+            if style_url is not None:
+                style_id = style_url.text.strip().lstrip("#")
+                if style_id in estilos:
+                    color = estilos[style_id]
         
         for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
             coordinates = line_string.coordinates.text.strip().split()
@@ -403,7 +412,7 @@ if uploaded_file is not None:
             # Adiciona a LineString ao mapa com a distância no tooltip
             folium.PolyLine(
                 coordinates,
-                color=color,
+                color=color,  # A cor já foi definida na função processar_folder_link
                 weight=3,
                 opacity=0.7,
                 tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"  # Exibe a distância
