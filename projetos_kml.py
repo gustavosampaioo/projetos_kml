@@ -31,46 +31,60 @@ def extrair_estilos(root):
     return estilos
 
 
-# Função para processar folders que contenham "LINK" no nome
 def processar_folder_link(folder, estilos):
     distancia_folder = 0.0
     dados = []
     coordenadas_folder = []
+    dados_em_andamento = []
+    dados_concluido = []
     
     # Verifica se o nome da pasta contém "LINK PARCEIROS"
     nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
     is_link_parceiros = "LINK PARCEIROS" in nome_folder.upper()
     
-    # Itera sobre os Placemarks dentro da pasta
-    for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
-        nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
-        color = "blue"  # Cor padrão
+    # Itera sobre as subpastas dentro da pasta LINK
+    for subfolder in folder.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
+        subfolder_name = subfolder.name.text if hasattr(subfolder, 'name') else "Subpasta Desconhecida"
         
-        # Se for uma pasta "LINK PARCEIROS", define a cor como vermelha
-        if is_link_parceiros:
-            color = "red"
-        else:
-            # Caso contrário, usa a cor definida no estilo
-            style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
-            if style_url is not None:
-                style_id = style_url.text.strip().lstrip("#")
-                if style_id in estilos:
-                    color = estilos[style_id]
+        # Verifica se a subpasta é "EM ANDAMENTO" ou "CONCLUÍDO"
+        is_em_andamento = "EM ANDAMENTO" in subfolder_name.upper()
+        is_concluido = "CONCLUÍDO" in subfolder_name.upper()
         
-        # Processa as LineStrings dentro do Placemark
-        for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
-            coordinates = line_string.coordinates.text.strip().split()
-            coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
+        # Processa as LineString dentro da subpasta
+        for placemark in subfolder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
+            nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
+            color = "blue"  # Cor padrão
             
-            # Calcula a distância da LineString
-            distancia = calcular_distancia_linestring(coordinates)
-            distancia_folder += distancia
+            # Se for uma pasta "LINK PARCEIROS", define a cor como vermelha
+            if is_link_parceiros:
+                color = "red"
+            else:
+                # Caso contrário, usa a cor definida no estilo
+                style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
+                if style_url is not None:
+                    style_id = style_url.text.strip().lstrip("#")
+                    if style_id in estilos:
+                        color = estilos[style_id]
             
-            # Adiciona os dados às listas
-            dados.append([nome_placemark, distancia])
-            coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Adiciona line_style como "solid"
+            for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
+                coordinates = line_string.coordinates.text.strip().split()
+                coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
+                
+                distancia = calcular_distancia_linestring(coordinates)
+                distancia_folder += distancia
+                
+                # Adiciona as informações às listas correspondentes
+                if is_em_andamento:
+                    dados_em_andamento.append([nome_placemark, distancia])
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "dashed"))  # Tracejado para "EM ANDAMENTO"
+                elif is_concluido:
+                    dados_concluido.append([nome_placemark, distancia])
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para "CONCLUÍDO"
+                else:
+                    dados.append([nome_placemark, distancia])
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para outras pastas
     
-    return distancia_folder, dados, coordenadas_folder
+    return distancia_folder, dados, coordenadas_folder, dados_em_andamento, dados_concluido
 
 # Função para buscar recursivamente por pastas "CTO'S"
 def buscar_ctos(folder, ctos_processados=None):
@@ -154,10 +168,12 @@ def processar_kml(caminho_arquivo):
         
         # Processa pastas LINK
         if "LINK" in nome_folder.upper():
-            distancia_folder, dados, coordenadas_folder = processar_folder_link(folder, estilos)
+            distancia_folder, dados, coordenadas_folder, em_andamento, concluido = processar_folder_link(folder, estilos)
             distancia_total += distancia_folder
             dados_por_pasta[nome_folder] = (distancia_folder, dados)
             coordenadas_por_pasta[nome_folder] = coordenadas_folder
+            dados_em_andamento.extend(em_andamento)
+            dados_concluido.extend(concluido)
         
         # Processa pastas que contenham "CIDADES" no nome
         if "CIDADES" in nome_folder.upper():
