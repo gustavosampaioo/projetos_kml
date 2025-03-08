@@ -456,10 +456,10 @@ if uploaded_file is not None:
             # Adiciona a LineString ao mapa
             folium.PolyLine(
                 coordinates,
-                color=color,  # A cor já está definida como vermelha para "LINK PARCEIROS"
-                weight=3,
-                opacity=0.7,
-                dash_array=dash_array,  # Aplica o tracejado se necessário
+                color=color,  # Cor da linha (vermelho para "LINK PARCEIROS", azul para outras)
+                weight=3,     # Espessura da linha (consistente para todas as linhas)
+                opacity=0.7,  # Opacidade da linha
+                dash_array=dash_array,  # Aplica o tracejado apenas para "EM ANDAMENTO"
                 tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"
             ).add_to(mapa)
     
