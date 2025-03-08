@@ -456,12 +456,49 @@ if uploaded_file is not None:
             # Adiciona a LineString ao mapa
             folium.PolyLine(
                 coordinates,
-                color=color,  # Cor da linha (vermelho para "LINK PARCEIROS", azul para outras)
-                weight=3,     # Espessura da linha (consistente para todas as linhas)
+                color=color,  # Cor da linha
+                weight=3,     # Espessura da linha
                 opacity=0.7,  # Opacidade da linha
                 dash_array=dash_array,  # Aplica o tracejado apenas para "EM ANDAMENTO"
                 tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"
             ).add_to(mapa)
+    
+    # Adiciona marcadores das cidades com tamanho menor e exibe o nome diretamente no mapa
+    for nome, coord in cidades_coords:
+        folium.Marker(
+            location=coord,
+            icon=folium.Icon(icon="home", color="green", icon_size=(10, 10)),  # Ajusta o tamanho do ícone
+            tooltip=nome  # Exibe o nome do placemark diretamente no mapa
+        ).add_to(mapa)
+
+# Exibe o mapa no Streamlit
+folium_static(mapa)
+
+# Exibe tabelas para pastas "EM ANDAMENTO" e "CONCLUÍDO"
+if dados_em_andamento or dados_concluido:
+    st.subheader("Status das Rotas - LINK")
+    
+    # Tabela para "EM ANDAMENTO"
+    if dados_em_andamento:
+        st.write("#### Rotas em Andamento")
+        df_em_andamento = pd.DataFrame(
+            dados_em_andamento,
+            columns=["Rota", "Distância (m)"]
+        )
+        df_em_andamento.insert(0, "ID", range(1, len(df_em_andamento) + 1))
+        df_em_andamento.set_index("ID", inplace=True)
+        st.dataframe(df_em_andamento)
+    
+    # Tabela para "CONCLUÍDO"
+    if dados_concluido:
+        st.write("#### Rotas Concluídas")
+        df_concluido = pd.DataFrame(
+            dados_concluido,
+            columns=["Rota", "Distância (m)"]
+        )
+        df_concluido.insert(0, "ID", range(1, len(df_concluido) + 1))
+        df_concluido.set_index("ID", inplace=True)
+        st.dataframe(df_concluido)
     
     # Adiciona marcadores das cidades com tamanho menor e exibe o nome diretamente no mapa
     for nome, coord in cidades_coords:
