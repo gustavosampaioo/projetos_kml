@@ -420,8 +420,8 @@ if uploaded_file is not None:
     with open("temp.kml", "wb") as f:
         f.write(uploaded_file.getbuffer())
     
-    # Processa o KML
-    distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon = processar_kml("temp.kml")
+    # Processa o KML (desempacota todos os 7 valores retornados)
+    distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido = processar_kml("temp.kml")
     
     # Exibe o mapa e outras informações
     st.subheader("Mapa do Link entre Cidades")
@@ -431,17 +431,21 @@ if uploaded_file is not None:
     
     # Adiciona LineStrings e marcadores ao mapa
     for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
-        for nome_placemark, coordinates, color in coordenadas_folder:
+        for nome_placemark, coordinates, color, line_style in coordenadas_folder:
             # Calcula a distância da LineString
             distancia = calcular_distancia_linestring(coordinates)
             
-            # Adiciona a LineString ao mapa com a distância no tooltip
+            # Define o estilo da linha
+            dash_array = "5, 5" if line_style == "dashed" else None
+            
+            # Adiciona a LineString ao mapa
             folium.PolyLine(
                 coordinates,
-                color=color,  # A cor já foi definida na função processar_folder_link
-                weight=3,
-                opacity=0.7,
-                tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"  # Exibe a distância
+                color=color,  # Cor da linha
+                weight=3,     # Espessura da linha
+                opacity=0.7,  # Opacidade da linha
+                dash_array=dash_array,  # Aplica o tracejado apenas para "EM ANDAMENTO"
+                tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"
             ).add_to(mapa)
     
     # Adiciona marcadores das cidades com tamanho menor e exibe o nome diretamente no mapa
@@ -495,6 +499,32 @@ if uploaded_file is not None:
     
     # Exibe a tabela
     st.dataframe(df_tabela_pastas)
+    
+    # Exibe tabelas para pastas "EM ANDAMENTO" e "CONCLUÍDO"
+    if dados_em_andamento or dados_concluido:
+        st.subheader("Status das Rotas - LINK")
+        
+        # Tabela para "EM ANDAMENTO"
+        if dados_em_andamento:
+            st.write("#### Rotas em Andamento")
+            df_em_andamento = pd.DataFrame(
+                dados_em_andamento,
+                columns=["Rota", "Distância (m)"]
+            )
+            df_em_andamento.insert(0, "ID", range(1, len(df_em_andamento) + 1))
+            df_em_andamento.set_index("ID", inplace=True)
+            st.dataframe(df_em_andamento)
+        
+        # Tabela para "CONCLUÍDO"
+        if dados_concluido:
+            st.write("#### Rotas Concluídas")
+            df_concluido = pd.DataFrame(
+                dados_concluido,
+                columns=["Rota", "Distância (m)"]
+            )
+            df_concluido.insert(0, "ID", range(1, len(df_concluido) + 1))
+            df_concluido.set_index("ID", inplace=True)
+            st.dataframe(df_concluido)
     
     # Exibe o dashboard GPON
     criar_dashboard_gpon(dados_gpon)
