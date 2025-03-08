@@ -440,7 +440,7 @@ if uploaded_file is not None:
             # Adiciona a LineString ao mapa
             folium.PolyLine(
                 coordinates,
-                color=color,
+                color=color,  # A cor já está definida como vermelha para "LINK PARCEIROS"
                 weight=3,
                 opacity=0.7,
                 dash_array=dash_array,  # Aplica o tracejado se necessário
