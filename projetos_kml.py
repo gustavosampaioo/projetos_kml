@@ -66,7 +66,7 @@ def processar_folder_link(folder, estilos):
             
             # Adiciona os dados às listas
             dados.append([nome_placemark, distancia])
-            coordenadas_folder.append((nome_placemark, coordinates, color))
+            coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Adiciona line_style como "solid"
     
     return distancia_folder, dados, coordenadas_folder
 
