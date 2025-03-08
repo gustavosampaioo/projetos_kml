@@ -4,7 +4,6 @@ import folium
 from streamlit_folium import folium_static
 from pykml import parser
 from geopy.distance import geodesic
-import plotly.express as px
 
 # Função para calcular a distância total de uma LineString em metros
 def calcular_distancia_linestring(coordinates):
@@ -35,36 +34,56 @@ def processar_folder_link(folder, estilos):
     distancia_folder = 0.0
     dados = []
     coordenadas_folder = []
+    dados_em_andamento = []
+    dados_concluido = []
     
     # Verifica se o nome da pasta contém "LINK PARCEIROS"
     nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
     is_link_parceiros = "LINK PARCEIROS" in nome_folder.upper()
     
-    for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
-        nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
-        color = "blue"  # Cor padrão
+    # Itera sobre as subpastas dentro da pasta LINK
+    for subfolder in folder.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
+        subfolder_name = subfolder.name.text if hasattr(subfolder, 'name') else "Subpasta Desconhecida"
         
-        # Se for uma pasta "LINK PARCEIROS", define a cor como vermelha
-        if is_link_parceiros:
-            color = "red"
-        else:
-            # Caso contrário, usa a cor definida no estilo
-            style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
-            if style_url is not None:
-                style_id = style_url.text.strip().lstrip("#")
-                if style_id in estilos:
-                    color = estilos[style_id]
+        # Verifica se a subpasta é "EM ANDAMENTO" ou "CONCLUÍDO"
+        is_em_andamento = "EM ANDAMENTO" in subfolder_name.upper()
+        is_concluido = "CONCLUÍDO" in subfolder_name.upper()
         
-        for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
-            coordinates = line_string.coordinates.text.strip().split()
-            coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
+        # Processa as LineString dentro da subpasta
+        for placemark in subfolder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
+            nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
+            color = "blue"  # Cor padrão
             
-            distancia = calcular_distancia_linestring(coordinates)
-            distancia_folder += distancia
-            dados.append([nome_placemark, distancia])
-            coordenadas_folder.append((nome_placemark, coordinates, color))
+            # Se for uma pasta "LINK PARCEIROS", define a cor como vermelha
+            if is_link_parceiros:
+                color = "red"
+            else:
+                # Caso contrário, usa a cor definida no estilo
+                style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
+                if style_url is not None:
+                    style_id = style_url.text.strip().lstrip("#")
+                    if style_id in estilos:
+                        color = estilos[style_id]
+            
+            for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
+                coordinates = line_string.coordinates.text.strip().split()
+                coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
+                
+                distancia = calcular_distancia_linestring(coordinates)
+                distancia_folder += distancia
+                
+                # Adiciona as informações às listas correspondentes
+                if is_em_andamento:
+                    dados_em_andamento.append([nome_placemark, distancia])
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "dashed"))  # Tracejado
+                elif is_concluido:
+                    dados_concluido.append([nome_placemark, distancia])
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido
+                else:
+                    dados.append([nome_placemark, distancia])
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido
     
-    return distancia_folder, dados, coordenadas_folder
+    return distancia_folder, dados, coordenadas_folder, dados_em_andamento, dados_concluido
 
 # Função para buscar recursivamente por pastas "CTO'S"
 def buscar_ctos(folder, ctos_processados=None):
@@ -139,17 +158,23 @@ def processar_kml(caminho_arquivo):
     dados_por_pasta = {}
     coordenadas_por_pasta = {}
     cidades_coords = []
+    dados_em_andamento = []
+    dados_concluido = []
     
     for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
         nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
         
         # Processa pastas LINK
         if "LINK" in nome_folder.upper():
-            distancia_folder, dados, coordenadas_folder = processar_folder_link(folder, estilos)
+            distancia_folder, dados, coordenadas_folder, em_andamento, concluido = processar_folder_link(folder, estilos)
             distancia_total += distancia_folder
             if dados:
                 dados_por_pasta[nome_folder] = (distancia_folder, dados)
                 coordenadas_por_pasta[nome_folder] = coordenadas_folder
+            if em_andamento:
+                dados_em_andamento.extend(em_andamento)
+            if concluido:
+                dados_concluido.extend(concluido)
         
         # Processa pastas que contenham "CIDADES" no nome
         if "CIDADES" in nome_folder.upper():
@@ -165,7 +190,7 @@ def processar_kml(caminho_arquivo):
     # Processa pastas GPON
     dados_gpon = processar_gpon(root)
     
-    return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon
+    return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido
 
 # Função para criar o dashboard GPON
 def criar_dashboard_gpon(dados_gpon):
@@ -381,7 +406,6 @@ def criar_tabela_interativa_gpon(dados_gpon):
                         st.write("#### Rotas e CTO's")
                         st.dataframe(df_tabela_rotas)
 
-
 # Configuração do aplicativo Streamlit
 st.title("Analisador de Projetos")
 st.write("Este aplicativo analisa um arquivo no formato .kml e imprime informações bem dinâmicas e interativas sobre o projetos de fibra ótica")
@@ -395,7 +419,7 @@ if uploaded_file is not None:
         f.write(uploaded_file.getbuffer())
     
     # Processa o KML
-    distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon = processar_kml("temp.kml")
+    distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido = processar_kml("temp.kml")
     
     # Exibe o mapa e outras informações
     st.subheader("Mapa do Link entre Cidades")
@@ -405,17 +429,21 @@ if uploaded_file is not None:
     
     # Adiciona LineStrings e marcadores ao mapa
     for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
-        for nome_placemark, coordinates, color in coordenadas_folder:
+        for nome_placemark, coordinates, color, line_style in coordenadas_folder:
             # Calcula a distância da LineString
             distancia = calcular_distancia_linestring(coordinates)
             
-            # Adiciona a LineString ao mapa com a distância no tooltip
+            # Define o estilo da linha
+            dash_array = "5, 5" if line_style == "dashed" else None
+            
+            # Adiciona a LineString ao mapa
             folium.PolyLine(
                 coordinates,
-                color=color,  # A cor já foi definida na função processar_folder_link
+                color=color,
                 weight=3,
                 opacity=0.7,
-                tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"  # Exibe a distância
+                dash_array=dash_array,  # Aplica o tracejado se necessário
+                tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"
             ).add_to(mapa)
     
     # Adiciona marcadores das cidades com tamanho menor e exibe o nome diretamente no mapa
@@ -469,6 +497,32 @@ if uploaded_file is not None:
     
     # Exibe a tabela
     st.dataframe(df_tabela_pastas)
+    
+    # Exibe tabelas para pastas "EM ANDAMENTO" e "CONCLUÍDO"
+    if dados_em_andamento or dados_concluido:
+        st.subheader("Status das Rotas - LINK")
+        
+        # Tabela para "EM ANDAMENTO"
+        if dados_em_andamento:
+            st.write("#### Rotas em Andamento")
+            df_em_andamento = pd.DataFrame(
+                dados_em_andamento,
+                columns=["Rota", "Distância (m)"]
+            )
+            df_em_andamento.insert(0, "ID", range(1, len(df_em_andamento) + 1))
+            df_em_andamento.set_index("ID", inplace=True)
+            st.dataframe(df_em_andamento)
+        
+        # Tabela para "CONCLUÍDO"
+        if dados_concluido:
+            st.write("#### Rotas Concluídas")
+            df_concluido = pd.DataFrame(
+                dados_concluido,
+                columns=["Rota", "Distância (m)"]
+            )
+            df_concluido.insert(0, "ID", range(1, len(df_concluido) + 1))
+            df_concluido.set_index("ID", inplace=True)
+            st.dataframe(df_concluido)
     
     # Exibe o dashboard GPON
     criar_dashboard_gpon(dados_gpon)
