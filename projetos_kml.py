@@ -29,7 +29,6 @@ def extrair_estilos(root):
                 estilos[style_id] = color
     return estilos
 
-# Função para processar folders que contenham "LINK" no nome
 def processar_folder_link(folder, estilos):
     distancia_folder = 0.0
     dados = []
@@ -75,13 +74,13 @@ def processar_folder_link(folder, estilos):
                 # Adiciona as informações às listas correspondentes
                 if is_em_andamento:
                     dados_em_andamento.append([nome_placemark, distancia])
-                    coordenadas_folder.append((nome_placemark, coordinates, color, "dashed"))  # Tracejado
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "dashed"))  # Tracejado para "EM ANDAMENTO"
                 elif is_concluido:
                     dados_concluido.append([nome_placemark, distancia])
-                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para "CONCLUÍDO"
                 else:
                     dados.append([nome_placemark, distancia])
-                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para outras pastas
     
     return distancia_folder, dados, coordenadas_folder, dados_em_andamento, dados_concluido
 
