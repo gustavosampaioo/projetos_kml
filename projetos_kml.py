@@ -167,10 +167,12 @@ def processar_kml(caminho_arquivo):
         
         # Processa pastas LINK
         if "LINK" in nome_folder.upper():
-            distancia_folder, dados, coordenadas_folder = processar_folder_link(folder, estilos)
+            distancia_folder, dados, coordenadas_folder, em_andamento, concluido = processar_folder_link(folder, estilos)
             distancia_total += distancia_folder
             dados_por_pasta[nome_folder] = (distancia_folder, dados)
             coordenadas_por_pasta[nome_folder] = coordenadas_folder
+            dados_em_andamento.extend(em_andamento)
+            dados_concluido.extend(concluido)
         
         # Processa pastas que contenham "CIDADES" no nome
         if "CIDADES" in nome_folder.upper():
