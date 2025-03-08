@@ -143,6 +143,9 @@ def processar_kml(caminho_arquivo):
     dados_por_pasta = {}
     coordenadas_por_pasta = {}
     cidades_coords = []
+    dados_em_andamento = []
+    dados_concluido = []
+    dados_gpon = {}
     
     for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
         nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
@@ -164,8 +167,30 @@ def processar_kml(caminho_arquivo):
                     lon = float(coords[0])
                     lat = float(coords[1])
                     cidades_coords.append((nome, (lat, lon)))
+        
+        # Processa pastas GPON
+        if "GPON" in nome_folder.upper():
+            dados_gpon[nome_folder] = {"primeiro_nivel": []}
+            
+            # Coleta todas as subpastas do primeiro nível após a pasta GPON
+            for subpasta in folder.findall("{http://www.opengis.net/kml/2.2}Folder"):
+                nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
+                
+                # Dados da subpasta do primeiro nível
+                dados_subpasta = {"nome": nome_subpasta, "ctos": buscar_ctos(subpasta), "linestrings": []}
+                
+                # Processa as LineStrings dentro da subpasta
+                for placemark in subpasta.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
+                    for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
+                        coordinates = line_string.coordinates.text.strip().split()
+                        coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
+                        distancia = calcular_distancia_linestring(coordinates)
+                        dados_subpasta["linestrings"].append((placemark.name.text if hasattr(placemark, 'name') else "Sem Nome", distancia))
+                
+                # Adiciona a subpasta do primeiro nível aos dados da pasta GPON
+                dados_gpon[nome_folder]["primeiro_nivel"].append(dados_subpasta)
     
-    return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords
+    return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido
 
 # Função para criar o dashboard GPON
 def criar_dashboard_gpon(dados_gpon):
