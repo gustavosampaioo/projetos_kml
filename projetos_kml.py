@@ -30,6 +30,7 @@ def extrair_estilos(root):
                 estilos[style_id] = color
     return estilos
 
+
 def processar_folder_link(folder, estilos):
     distancia_folder = 0.0
     dados = []
