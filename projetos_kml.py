@@ -524,8 +524,8 @@ if uploaded_file is not None:
         # Calcula o total geral
         total_geral = df_link_parceiros["Distância (m)"].sum()
         
-        # Adiciona uma linha de total
-        df_link_parceiros.loc["Total"] = ["", "Total", total_geral, ""]
+        # Adiciona uma linha de total com valores para todas as colunas
+        df_link_parceiros.loc["Total"] = ["", "Total", "", total_geral, ""]
         
         # Define a coluna ID como índice do DataFrame
         df_link_parceiros.set_index("ID", inplace=True)
