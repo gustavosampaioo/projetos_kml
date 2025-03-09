@@ -509,8 +509,8 @@ if uploaded_file is not None:
     # Adiciona marcadores das cidades ao mapa com ícone azul padrão redimensionado
     for nome_cidade, coords in cidades_coords:
         casa_icon = CustomIcon(
-            icon_image="https://e7.pngegg.com/pngimages/907/970/png-clipart-white-house-logo-computer-icons-home-house-home-blue-angle-thumbnail.png",  # URL de um ícone de casa
-            icon_size=(20, 20)  # Tamanho do ícone (largura, altura)
+            icon_image="https://fontetelecom.com.br/infraestrutura/assets/img/logo/logo-1.png",  # URL de um ícone de casa
+            icon_size=(40, 20)  # Tamanho do ícone (largura, altura)
         )
         
         folium.Marker(
