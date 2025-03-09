@@ -509,7 +509,7 @@ if uploaded_file is not None:
         # Define o ícone personalizado
         casa_icon = CustomIcon(
             icon_image="https://cdn-icons-png.flaticon.com/512/25/25694.png",  # URL de um ícone de casa
-            icon_size=(20, 20)  # Tamanho do ícone (largura, altura)
+            icon_size=(20, 20))  # Tamanho do ícone (largura, altura)
         
         folium.Marker(
             location=coords,
