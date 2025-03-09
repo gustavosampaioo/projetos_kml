@@ -6,6 +6,7 @@ from pykml import parser
 from geopy.distance import geodesic
 import plotly.express as px
 from folium.features import CustomIcon
+from folium import Icon
 
 # Função para calcular a distância total de uma LineString em metros
 def calcular_distancia_linestring(coordinates):
