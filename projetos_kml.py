@@ -490,7 +490,7 @@ if uploaded_file is not None:
                 coordinates,
                 color=color,  # Cor da linha
                 weight=weight,  # Espessura da linha
-                opacity=0.3,  # Opacidade da linha
+                opacity=1,  # Opacidade da linha
                 dash_array=dash_array,  # Aplica o tracejado apenas para "EM ANDAMENTO"
                 tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"
             ).add_to(mapa)
