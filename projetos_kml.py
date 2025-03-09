@@ -43,7 +43,26 @@ def processar_folder_link(folder, estilos):
     nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
     is_link_parceiros = "LINK PARCEIROS" in nome_folder.upper()
     
-    # Itera sobre as subpastas dentro da pasta LINK
+    # Se for "LINK PARCEIROS", processa diretamente as LineString
+    if is_link_parceiros:
+        for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
+            nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
+            color = "red"  # Cor vermelha para "LINK PARCEIROS"
+            
+            for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
+                coordinates = line_string.coordinates.text.strip().split()
+                coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
+                
+                distancia = calcular_distancia_linestring(coordinates)
+                distancia_folder += distancia
+                
+                # Adiciona as informações às listas correspondentes
+                dados.append([nome_placemark, distancia])
+                coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para "LINK PARCEIROS"
+        
+        return distancia_folder, dados, coordenadas_folder, [], [], is_link_parceiros
+    
+    # Caso contrário, processa como pasta "LINK" normal
     for subfolder in folder.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
         subfolder_name = subfolder.name.text if hasattr(subfolder, 'name') else "Subpasta Desconhecida"
         
@@ -56,16 +75,12 @@ def processar_folder_link(folder, estilos):
             nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
             color = "blue"  # Cor padrão para "LINK"
             
-            # Se for uma pasta "LINK PARCEIROS", define a cor como vermelha
-            if is_link_parceiros:
-                color = "red"
-            else:
-                # Caso contrário, usa a cor definida no estilo
-                style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
-                if style_url is not None:
-                    style_id = style_url.text.strip().lstrip("#")
-                    if style_id in estilos:
-                        color = estilos[style_id]
+            # Usa a cor definida no estilo
+            style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
+            if style_url is not None:
+                style_id = style_url.text.strip().lstrip("#")
+                if style_id in estilos:
+                    color = estilos[style_id]
             
             for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
                 coordinates = line_string.coordinates.text.strip().split()
@@ -75,10 +90,7 @@ def processar_folder_link(folder, estilos):
                 distancia_folder += distancia
                 
                 # Adiciona as informações às listas correspondentes
-                if is_link_parceiros:
-                    dados.append([nome_placemark, distancia])
-                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para "LINK PARCEIROS"
-                elif is_em_andamento:
+                if is_em_andamento:
                     dados_em_andamento.append([nome_placemark, distancia])
                     coordenadas_folder.append((nome_placemark, coordinates, color, "dashed"))  # Tracejado para "EM ANDAMENTO"
                 elif is_concluido:
