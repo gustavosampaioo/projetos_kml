@@ -509,7 +509,7 @@ if uploaded_file is not None:
     for nome_cidade, coords in cidades_coords:
         # Define o ícone personalizado
         casa_icon = CustomIcon(
-            icon_image="https://cdn-icons-png.flaticon.com/512/25/25694.png",  # URL de um ícone de casa
+            icon_image="https://fontetelecom.com.br/infraestrutura/assets/img/logo/logo-1.png",  # URL de um ícone de casa
             icon_size=(20, 20))  # Tamanho do ícone (largura, altura)
         
         folium.Marker(
