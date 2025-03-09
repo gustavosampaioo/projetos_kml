@@ -606,8 +606,39 @@ if uploaded_file is not None:
                 columns=["Pasta", "Rota", "Distância (m)"]
             )
             df_em_andamento.insert(0, "ID", range(1, len(df_em_andamento) + 1))
-            df_em_andamento.set_index("ID", inplace=True)
-            st.dataframe(df_em_andamento)
+            
+            # Calcula o subtotal por pasta
+            subtotal_em_andamento = df_em_andamento.groupby("Pasta")["Distância (m)"].sum().reset_index()
+            subtotal_em_andamento.columns = ["Pasta", "Subtotal"]
+            
+            # Cria uma lista para armazenar as linhas da tabela
+            dados_tabela_em_andamento = []
+            
+            # Adiciona todas as rotas primeiro
+            for _, rota in df_em_andamento.iterrows():
+                dados_tabela_em_andamento.append([rota["ID"], rota["Pasta"], rota["Rota"], rota["Distância (m)"]])
+            
+            # Adiciona os subtotais no final
+            for _, subtotal in subtotal_em_andamento.iterrows():
+                dados_tabela_em_andamento.append(["", subtotal["Pasta"], "Subtotal", subtotal["Subtotal"]])
+            
+            # Calcula o total geral
+            total_em_andamento = df_em_andamento["Distância (m)"].sum()
+            
+            # Adiciona a linha de total geral
+            dados_tabela_em_andamento.append(["", "Total", "", total_em_andamento])
+            
+            # Cria o DataFrame final
+            df_tabela_final_em_andamento = pd.DataFrame(
+                dados_tabela_em_andamento,
+                columns=["ID", "Pasta", "Rota", "Distância (m)"]
+            )
+            
+            # Define a coluna ID como índice do DataFrame
+            df_tabela_final_em_andamento.set_index("ID", inplace=True)
+            
+            # Exibe a tabela
+            st.dataframe(df_tabela_final_em_andamento)
         
         # Tabela para "CONCLUÍDO"
         if dados_concluido:
@@ -617,8 +648,39 @@ if uploaded_file is not None:
                 columns=["Pasta", "Rota", "Distância (m)"]
             )
             df_concluido.insert(0, "ID", range(1, len(df_concluido) + 1))
-            df_concluido.set_index("ID", inplace=True)
-            st.dataframe(df_concluido)
+            
+            # Calcula o subtotal por pasta
+            subtotal_concluido = df_concluido.groupby("Pasta")["Distância (m)"].sum().reset_index()
+            subtotal_concluido.columns = ["Pasta", "Subtotal"]
+            
+            # Cria uma lista para armazenar as linhas da tabela
+            dados_tabela_concluido = []
+            
+            # Adiciona todas as rotas primeiro
+            for _, rota in df_concluido.iterrows():
+                dados_tabela_concluido.append([rota["ID"], rota["Pasta"], rota["Rota"], rota["Distância (m)"]])
+            
+            # Adiciona os subtotais no final
+            for _, subtotal in subtotal_concluido.iterrows():
+                dados_tabela_concluido.append(["", subtotal["Pasta"], "Subtotal", subtotal["Subtotal"]])
+            
+            # Calcula o total geral
+            total_concluido = df_concluido["Distância (m)"].sum()
+            
+            # Adiciona a linha de total geral
+            dados_tabela_concluido.append(["", "Total", "", total_concluido])
+            
+            # Cria o DataFrame final
+            df_tabela_final_concluido = pd.DataFrame(
+                dados_tabela_concluido,
+                columns=["ID", "Pasta", "Rota", "Distância (m)"]
+            )
+            
+            # Define a coluna ID como índice do DataFrame
+            df_tabela_final_concluido.set_index("ID", inplace=True)
+            
+            # Exibe a tabela
+            st.dataframe(df_tabela_final_concluido)
     
     # Exibe o dashboard GPON
     criar_dashboard_gpon(dados_gpon)
