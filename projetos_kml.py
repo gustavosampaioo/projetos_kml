@@ -480,11 +480,11 @@ if uploaded_file is not None:
             # Define o estilo da linha
             if line_style == "dashed":
                 dash_array = "10, 10"  # Tracejado mais perceptível
-                weight = 2  # Espessura maior para destacar
-                opacity = 0.6  # Opacidade reduzida para evitar efeito de linha clara
+                weight = 2  # Espessura mais fina para "EM ANDAMENTO"
+                opacity = 0.9  # Opacidade reduzida para evitar efeito de linha clara
             else:
                 dash_array = None  # Linha sólida
-                weight = 5  # Espessura padrão
+                weight = 3  # Espessura padrão para linhas sólidas
                 opacity = 1.0  # Opacidade total para linhas sólidas
             
             # Adiciona a LineString ao mapa
@@ -496,7 +496,7 @@ if uploaded_file is not None:
                 dash_array=dash_array,  # Aplica o tracejado apenas para "EM ANDAMENTO"
                 tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"
             ).add_to(mapa)
-    
+        
     # Adiciona marcadores das cidades com tamanho menor e exibe o nome diretamente no mapa
     for nome, coord in cidades_coords:
         folium.Marker(
