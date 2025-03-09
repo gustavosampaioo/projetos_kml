@@ -509,7 +509,7 @@ if uploaded_file is not None:
         folium.Marker(
             location=coords,
             tooltip=nome_cidade,
-            icon=folium.Icon(color="green", icon="home", prefix="fa")  # Ícone de casa do FontAwesome
+            icon=folium.Icon(color="green", icon="home")  # Ícone de casa do FontAwesome
         ).add_to(mapa)
     
     # Exibe o mapa no Streamlit
