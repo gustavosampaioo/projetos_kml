@@ -57,7 +57,7 @@ def processar_folder_link(folder, estilos):
                 distancia_folder += distancia
                 
                 # Adiciona as informações às listas correspondentes
-                dados.append([nome_placemark, distancia])
+                dados.append([nome_folder, nome_placemark, distancia])  # Inclui o nome da pasta
                 coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para "LINK PARCEIROS"
         
         return distancia_folder, dados, coordenadas_folder, [], [], is_link_parceiros
@@ -91,16 +91,17 @@ def processar_folder_link(folder, estilos):
                 
                 # Adiciona as informações às listas correspondentes
                 if is_em_andamento:
-                    dados_em_andamento.append([nome_placemark, distancia])
+                    dados_em_andamento.append([nome_folder, nome_placemark, distancia])
                     coordenadas_folder.append((nome_placemark, coordinates, color, "dashed"))  # Tracejado para "EM ANDAMENTO"
                 elif is_concluido:
-                    dados_concluido.append([nome_placemark, distancia])
+                    dados_concluido.append([nome_folder, nome_placemark, distancia])
                     coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para "CONCLUÍDO"
                 else:
-                    dados.append([nome_placemark, distancia])
+                    dados.append([nome_folder, nome_placemark, distancia])
                     coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para outras pastas
     
     return distancia_folder, dados, coordenadas_folder, dados_em_andamento, dados_concluido, is_link_parceiros
+
 
 
 # Função para buscar recursivamente por pastas "CTO'S"
@@ -500,6 +501,38 @@ if uploaded_file is not None:
     # Exibe o mapa no Streamlit
     folium_static(mapa)
     
+    # Exibe tabela para "LINK PARCEIROS"
+    if dados_link_parceiros:
+        st.subheader("ROTAS LINK PARCEIROS")
+        
+        # Cria o DataFrame para a tabela dos "LINK PARCEIROS"
+        df_link_parceiros = pd.DataFrame(
+            dados_link_parceiros,
+            columns=["Pasta", "Rota", "Distância (m)"]
+        )
+        
+        # Adiciona a coluna ID
+        df_link_parceiros.insert(0, "ID", range(1, len(df_link_parceiros) + 1))
+        
+        # Calcula o subtotal por pasta
+        subtotal_por_pasta = df_link_parceiros.groupby("Pasta")["Distância (m)"].sum().reset_index()
+        subtotal_por_pasta.columns = ["Pasta", "Subtotal"]
+        
+        # Adiciona o subtotal ao DataFrame
+        df_link_parceiros = df_link_parceiros.merge(subtotal_por_pasta, on="Pasta", how="left")
+        
+        # Calcula o total geral
+        total_geral = df_link_parceiros["Distância (m)"].sum()
+        
+        # Adiciona uma linha de total
+        df_link_parceiros.loc["Total"] = ["", "Total", total_geral, ""]
+        
+        # Define a coluna ID como índice do DataFrame
+        df_link_parceiros.set_index("ID", inplace=True)
+        
+        # Exibe a tabela
+        st.dataframe(df_link_parceiros)
+    
     # Exibe tabelas para pastas LINK
     st.subheader("Quantidade de Fibra Ótica projetada - LINK")
     dados_tabela_pastas = []
@@ -510,8 +543,8 @@ if uploaded_file is not None:
     for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
         subtotal_pasta = 0.0
         for linha in dados:
-            dados_tabela_pastas.append([nome_folder, linha[0], linha[1]])
-            subtotal_pasta += linha[1]
+            dados_tabela_pastas.append([nome_folder, linha[1], linha[2]])
+            subtotal_pasta += linha[2]
         
         # Armazena o subtotal da pasta
         subtotais_pastas[nome_folder] = subtotal_pasta
@@ -550,7 +583,7 @@ if uploaded_file is not None:
             st.write("#### Rotas em Andamento")
             df_em_andamento = pd.DataFrame(
                 dados_em_andamento,
-                columns=["Rota", "Distância (m)"]
+                columns=["Pasta", "Rota", "Distância (m)"]
             )
             df_em_andamento.insert(0, "ID", range(1, len(df_em_andamento) + 1))
             df_em_andamento.set_index("ID", inplace=True)
@@ -561,22 +594,11 @@ if uploaded_file is not None:
             st.write("#### Rotas Concluídas")
             df_concluido = pd.DataFrame(
                 dados_concluido,
-                columns=["Rota", "Distância (m)"]
+                columns=["Pasta", "Rota", "Distância (m)"]
             )
             df_concluido.insert(0, "ID", range(1, len(df_concluido) + 1))
             df_concluido.set_index("ID", inplace=True)
             st.dataframe(df_concluido)
-    
-    # Exibe tabela para "LINK PARCEIROS"
-    if dados_link_parceiros:
-        st.subheader("Rotas - LINK PARCEIROS")
-        df_link_parceiros = pd.DataFrame(
-            dados_link_parceiros,
-            columns=["Rota", "Distância (m)"]
-        )
-        df_link_parceiros.insert(0, "ID", range(1, len(df_link_parceiros) + 1))
-        df_link_parceiros.set_index("ID", inplace=True)
-        st.dataframe(df_link_parceiros)
     
     # Exibe o dashboard GPON
     criar_dashboard_gpon(dados_gpon)
