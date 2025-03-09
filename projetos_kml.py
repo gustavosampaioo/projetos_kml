@@ -504,12 +504,12 @@ if uploaded_file is not None:
                 tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"
             ).add_to(mapa)
     
-    # Adiciona marcadores das cidades ao mapa
+    # Adiciona marcadores das cidades ao mapa com ícone de casa
     for nome_cidade, coords in cidades_coords:
         folium.Marker(
             location=coords,
             tooltip=nome_cidade,
-            icon=folium.Icon(color="blue", icon="info-sign")  # Personalize o ícone e a cor
+            icon=folium.Icon(color="green", icon="home", prefix="fa")  # Ícone de casa do FontAwesome
         ).add_to(mapa)
     
     # Exibe o mapa no Streamlit
