@@ -509,7 +509,7 @@ if uploaded_file is not None:
     # Adiciona marcadores das cidades ao mapa com ícone azul padrão redimensionado
     for nome_cidade, coords in cidades_coords:
         casa_icon = CustomIcon(
-            icon_image="https://cdn-icons-png.flaticon.com/512/25/25694.png",  # URL de um ícone de casa
+            icon_image="https://w7.pngwing.com/pngs/310/332/png-transparent-computer-icons-home-house-desktop-service-home-blue-logo-room-thumbnail.png",  # URL de um ícone de casa
             icon_size=(20, 20)  # Tamanho do ícone (largura, altura)
         )
         
