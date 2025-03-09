@@ -31,12 +31,14 @@ def extrair_estilos(root):
     return estilos
 
 
+# Função para processar pastas LINK e LINK PARCEIROS
 def processar_folder_link(folder, estilos):
     distancia_folder = 0.0
     dados = []
     coordenadas_folder = []
     dados_em_andamento = []
     dados_concluido = []
+    dados_link_parceiros = []  # Lista para armazenar dados dos LINK PARCEIROS
     
     # Verifica se o nome da pasta contém "LINK PARCEIROS"
     nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
@@ -74,7 +76,10 @@ def processar_folder_link(folder, estilos):
                 distancia_folder += distancia
                 
                 # Adiciona as informações às listas correspondentes
-                if is_em_andamento:
+                if is_link_parceiros:
+                    dados_link_parceiros.append([nome_placemark, distancia])
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para "LINK PARCEIROS"
+                elif is_em_andamento:
                     dados_em_andamento.append([nome_placemark, distancia])
                     coordenadas_folder.append((nome_placemark, coordinates, color, "dashed"))  # Tracejado para "EM ANDAMENTO"
                 elif is_concluido:
@@ -84,7 +89,8 @@ def processar_folder_link(folder, estilos):
                     dados.append([nome_placemark, distancia])
                     coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para outras pastas
     
-    return distancia_folder, dados, coordenadas_folder, dados_em_andamento, dados_concluido
+    return distancia_folder, dados, coordenadas_folder, dados_em_andamento, dados_concluido, dados_link_parceiros
+
 
 # Função para buscar recursivamente por pastas "CTO'S"
 def buscar_ctos(folder, ctos_processados=None):
@@ -161,6 +167,7 @@ def processar_kml(caminho_arquivo):
     cidades_coords = []
     dados_em_andamento = []
     dados_concluido = []
+    dados_link_parceiros = []  # Lista para armazenar dados dos LINK PARCEIROS
     dados_gpon = {}
     
     for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
@@ -168,12 +175,13 @@ def processar_kml(caminho_arquivo):
         
         # Processa pastas LINK
         if "LINK" in nome_folder.upper():
-            distancia_folder, dados, coordenadas_folder, em_andamento, concluido = processar_folder_link(folder, estilos)
+            distancia_folder, dados, coordenadas_folder, em_andamento, concluido, link_parceiros = processar_folder_link(folder, estilos)
             distancia_total += distancia_folder
             dados_por_pasta[nome_folder] = (distancia_folder, dados)
             coordenadas_por_pasta[nome_folder] = coordenadas_folder
             dados_em_andamento.extend(em_andamento)
             dados_concluido.extend(concluido)
+            dados_link_parceiros.extend(link_parceiros)  # Adiciona os dados dos LINK PARCEIROS
         
         # Processa pastas que contenham "CIDADES" no nome
         if "CIDADES" in nome_folder.upper():
@@ -208,7 +216,7 @@ def processar_kml(caminho_arquivo):
                 # Adiciona a subpasta do primeiro nível aos dados da pasta GPON
                 dados_gpon[nome_folder]["primeiro_nivel"].append(dados_subpasta)
     
-    return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido
+    return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros
 
 # Função para criar o dashboard GPON
 def criar_dashboard_gpon(dados_gpon):
@@ -437,8 +445,8 @@ if uploaded_file is not None:
     with open("temp.kml", "wb") as f:
         f.write(uploaded_file.getbuffer())
     
-    # Processa o KML (desempacota todos os 7 valores retornados)
-    distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido = processar_kml("temp.kml")
+    # Processa o KML (desempacota todos os 8 valores retornados)
+    distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros = processar_kml("temp.kml")
     
     # Exibe o mapa e outras informações
     st.subheader("Mapa do Link entre Cidades")
@@ -542,6 +550,17 @@ if uploaded_file is not None:
             df_concluido.insert(0, "ID", range(1, len(df_concluido) + 1))
             df_concluido.set_index("ID", inplace=True)
             st.dataframe(df_concluido)
+    
+    # Exibe tabela para "LINK PARCEIROS"
+    if dados_link_parceiros:
+        st.subheader("Rotas - LINK PARCEIROS")
+        df_link_parceiros = pd.DataFrame(
+            dados_link_parceiros,
+            columns=["Rota", "Distância (m)"]
+        )
+        df_link_parceiros.insert(0, "ID", range(1, len(df_link_parceiros) + 1))
+        df_link_parceiros.set_index("ID", inplace=True)
+        st.dataframe(df_link_parceiros)
     
     # Exibe o dashboard GPON
     criar_dashboard_gpon(dados_gpon)
