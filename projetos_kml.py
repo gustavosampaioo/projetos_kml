@@ -518,20 +518,39 @@ if uploaded_file is not None:
         subtotal_por_pasta = df_link_parceiros.groupby("Pasta")["Distância (m)"].sum().reset_index()
         subtotal_por_pasta.columns = ["Pasta", "Subtotal"]
         
-        # Adiciona o subtotal ao DataFrame
-        df_link_parceiros = df_link_parceiros.merge(subtotal_por_pasta, on="Pasta", how="left")
+        # Cria uma lista para armazenar as linhas da tabela
+        dados_tabela_link_parceiros = []
+        
+        # Itera sobre as pastas para adicionar as rotas e os subtotais
+        for pasta in subtotal_por_pasta["Pasta"].unique():
+            # Filtra as rotas da pasta atual
+            rotas_pasta = df_link_parceiros[df_link_parceiros["Pasta"] == pasta]
+            
+            # Adiciona as rotas da pasta
+            for _, rota in rotas_pasta.iterrows():
+                dados_tabela_link_parceiros.append([rota["ID"], rota["Pasta"], rota["Rota"], rota["Distância (m)"]])
+            
+            # Adiciona o subtotal da pasta
+            subtotal_pasta = subtotal_por_pasta[subtotal_por_pasta["Pasta"] == pasta]["Subtotal"].values[0]
+            dados_tabela_link_parceiros.append(["", pasta, "Subtotal", subtotal_pasta])
         
         # Calcula o total geral
         total_geral = df_link_parceiros["Distância (m)"].sum()
         
-        # Adiciona uma linha de total com valores para todas as colunas
-        df_link_parceiros.loc["Total"] = ["", "Total", "", total_geral, ""]
+        # Adiciona a linha de total geral
+        dados_tabela_link_parceiros.append(["", "Total", "", total_geral])
+        
+        # Cria o DataFrame final
+        df_tabela_final = pd.DataFrame(
+            dados_tabela_link_parceiros,
+            columns=["ID", "Pasta", "Rota", "Distância (m)"]
+        )
         
         # Define a coluna ID como índice do DataFrame
-        df_link_parceiros.set_index("ID", inplace=True)
+        df_tabela_final.set_index("ID", inplace=True)
         
         # Exibe a tabela
-        st.dataframe(df_link_parceiros)
+        st.dataframe(df_tabela_final)
     
     # Exibe tabelas para pastas LINK
     st.subheader("Quantidade de Fibra Ótica projetada - LINK")
