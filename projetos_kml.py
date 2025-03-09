@@ -506,16 +506,17 @@ if uploaded_file is not None:
                 tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"
             ).add_to(mapa)
     
-    # Adiciona marcadores das cidades ao mapa com o ícone azul padrão do folium
+    # Adiciona marcadores das cidades ao mapa com ícone azul padrão redimensionado
     for nome_cidade, coords in cidades_coords:
-        casa_icon = Icon(
-            icon="home"  # Ícone de casa padrão do folium
+        casa_icon = CustomIcon(
+            icon_image="https://cdn-icons-png.flaticon.com/512/25/25694.png",  # URL de um ícone de casa
+            icon_size=(20, 20)  # Tamanho do ícone (largura, altura)
         )
         
         folium.Marker(
             location=coords,
             tooltip=nome_cidade,
-            icon=casa_icon  # Usa o ícone azul padrão
+            icon=casa_icon  # Usa o ícone personalizado
         ).add_to(mapa)
     
     # Exibe o mapa no Streamlit
