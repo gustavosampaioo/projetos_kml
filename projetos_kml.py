@@ -521,18 +521,13 @@ if uploaded_file is not None:
         # Cria uma lista para armazenar as linhas da tabela
         dados_tabela_link_parceiros = []
         
-        # Itera sobre as pastas para adicionar as rotas e os subtotais
-        for pasta in subtotal_por_pasta["Pasta"].unique():
-            # Filtra as rotas da pasta atual
-            rotas_pasta = df_link_parceiros[df_link_parceiros["Pasta"] == pasta]
-            
-            # Adiciona as rotas da pasta
-            for _, rota in rotas_pasta.iterrows():
-                dados_tabela_link_parceiros.append([rota["ID"], rota["Pasta"], rota["Rota"], rota["Distância (m)"]])
-            
-            # Adiciona o subtotal da pasta
-            subtotal_pasta = subtotal_por_pasta[subtotal_por_pasta["Pasta"] == pasta]["Subtotal"].values[0]
-            dados_tabela_link_parceiros.append(["", pasta, "Subtotal", subtotal_pasta])
+        # Adiciona todas as rotas primeiro
+        for _, rota in df_link_parceiros.iterrows():
+            dados_tabela_link_parceiros.append([rota["ID"], rota["Pasta"], rota["Rota"], rota["Distância (m)"]])
+        
+        # Adiciona os subtotais no final
+        for _, subtotal in subtotal_por_pasta.iterrows():
+            dados_tabela_link_parceiros.append(["", subtotal["Pasta"], "Subtotal", subtotal["Subtotal"]])
         
         # Calcula o total geral
         total_geral = df_link_parceiros["Distância (m)"].sum()
