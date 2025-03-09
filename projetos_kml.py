@@ -38,7 +38,6 @@ def processar_folder_link(folder, estilos):
     coordenadas_folder = []
     dados_em_andamento = []
     dados_concluido = []
-    dados_link_parceiros = []  # Lista para armazenar dados dos LINK PARCEIROS
     
     # Verifica se o nome da pasta contém "LINK PARCEIROS"
     nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
@@ -55,7 +54,7 @@ def processar_folder_link(folder, estilos):
         # Processa as LineString dentro da subpasta
         for placemark in subfolder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
             nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
-            color = "blue"  # Cor padrão
+            color = "blue"  # Cor padrão para "LINK"
             
             # Se for uma pasta "LINK PARCEIROS", define a cor como vermelha
             if is_link_parceiros:
@@ -77,7 +76,7 @@ def processar_folder_link(folder, estilos):
                 
                 # Adiciona as informações às listas correspondentes
                 if is_link_parceiros:
-                    dados_link_parceiros.append([nome_placemark, distancia])
+                    dados.append([nome_placemark, distancia])
                     coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para "LINK PARCEIROS"
                 elif is_em_andamento:
                     dados_em_andamento.append([nome_placemark, distancia])
@@ -89,7 +88,7 @@ def processar_folder_link(folder, estilos):
                     dados.append([nome_placemark, distancia])
                     coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para outras pastas
     
-    return distancia_folder, dados, coordenadas_folder, dados_em_andamento, dados_concluido, dados_link_parceiros
+    return distancia_folder, dados, coordenadas_folder, dados_em_andamento, dados_concluido, is_link_parceiros
 
 
 # Função para buscar recursivamente por pastas "CTO'S"
@@ -173,15 +172,20 @@ def processar_kml(caminho_arquivo):
     for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
         nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
         
-        # Processa pastas LINK
+        # Processa pastas LINK e LINK PARCEIROS
         if "LINK" in nome_folder.upper():
-            distancia_folder, dados, coordenadas_folder, em_andamento, concluido, link_parceiros = processar_folder_link(folder, estilos)
+            distancia_folder, dados, coordenadas_folder, em_andamento, concluido, is_link_parceiros = processar_folder_link(folder, estilos)
             distancia_total += distancia_folder
-            dados_por_pasta[nome_folder] = (distancia_folder, dados)
-            coordenadas_por_pasta[nome_folder] = coordenadas_folder
-            dados_em_andamento.extend(em_andamento)
-            dados_concluido.extend(concluido)
-            dados_link_parceiros.extend(link_parceiros)  # Adiciona os dados dos LINK PARCEIROS
+            
+            # Separa os dados dos "LINK PARCEIROS" dos dados da pasta "LINK"
+            if is_link_parceiros:
+                dados_link_parceiros.extend(dados)
+                coordenadas_por_pasta[nome_folder] = coordenadas_folder
+            else:
+                dados_por_pasta[nome_folder] = (distancia_folder, dados)
+                coordenadas_por_pasta[nome_folder] = coordenadas_folder
+                dados_em_andamento.extend(em_andamento)
+                dados_concluido.extend(concluido)
         
         # Processa pastas que contenham "CIDADES" no nome
         if "CIDADES" in nome_folder.upper():
