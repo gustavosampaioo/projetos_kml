@@ -507,15 +507,21 @@ if uploaded_file is not None:
     
     # Adiciona marcadores das cidades ao mapa com ícone de casa e tamanho menor
     for nome_cidade, coords in cidades_coords:
-        # Define o ícone personalizado
-        casa_icon = CustomIcon(
-            icon_image="https://fontetelecom.com.br/infraestrutura/assets/img/logo/logo-1.png",  # URL de um ícone de casa
-            icon_size=(40, 20))  # Tamanho do ícone (largura, altura)
+        try:
+            # Tenta carregar o ícone personalizado
+            casa_icon = CustomIcon(
+                icon_image="https://cdn-icons-png.flaticon.com/512/25/25694.png",  # URL de um ícone de casa
+                icon_size=(20, 20)  # Tamanho do ícone (largura, altura)
+            )
+        except Exception as e:
+            # Se houver erro, usa um ícone padrão do folium
+            st.warning(f"Não foi possível carregar o ícone personalizado para {nome_cidade}. Usando ícone padrão.")
+            casa_icon = Icon(color="blue", icon="home")  # Ícone padrão do folium
         
         folium.Marker(
             location=coords,
             tooltip=nome_cidade,
-            icon=casa_icon  # Usa o ícone personalizado
+            icon=casa_icon  # Usa o ícone personalizado ou o fallback
         ).add_to(mapa)
     
     # Exibe o mapa no Streamlit
