@@ -43,7 +43,9 @@ def processar_folder_link(folder, estilos):
     is_link_parceiros = "LINK PARCEIROS" in nome_folder.upper()
     
     # Define a cor com base no nome da pasta
-    if "AMARELO" in nome_folder.upper():
+    if is_link_parceiros:
+        color = "red"  # Cor vermelha para "LINK PARCEIROS"
+    elif "AMARELO" in nome_folder.upper():
         color = "yellow"
     elif "VERDE" in nome_folder.upper():
         color = "green"
@@ -486,16 +488,18 @@ if uploaded_file is not None:
             if line_style == "dashed":
                 dash_array = "10, 10"  # Tracejado mais perceptível
                 weight = 4  # Espessura maior para destacar
+                opacity = 1.0  # Opacidade total (sem linha de fundo)
             else:
                 dash_array = None  # Linha sólida
                 weight = 3  # Espessura padrão
+                opacity = 0.7  # Opacidade padrão
             
             # Adiciona a LineString ao mapa
             folium.PolyLine(
                 coordinates,
-                color=color,  # Cor da linha (já definida com base no nome da pasta)
+                color=color,  # Cor da linha
                 weight=weight,  # Espessura da linha
-                opacity=0.7,  # Opacidade da linha
+                opacity=opacity,  # Opacidade da linha
                 dash_array=dash_array,  # Aplica o tracejado apenas para "EM ANDAMENTO"
                 tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"
             ).add_to(mapa)
