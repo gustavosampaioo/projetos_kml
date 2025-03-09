@@ -510,7 +510,7 @@ if uploaded_file is not None:
         # Define o ícone personalizado
         casa_icon = CustomIcon(
             icon_image="https://fontetelecom.com.br/infraestrutura/assets/img/logo/logo-1.png",  # URL de um ícone de casa
-            icon_size=(20, 20))  # Tamanho do ícone (largura, altura)
+            icon_size=(20, 40))  # Tamanho do ícone (largura, altura)
         
         folium.Marker(
             location=coords,
