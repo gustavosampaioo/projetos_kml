@@ -31,7 +31,6 @@ def extrair_estilos(root):
     return estilos
 
 
-# Função para processar pastas LINK e LINK PARCEIROS
 def processar_folder_link(folder, estilos):
     distancia_folder = 0.0
     dados = []
@@ -43,11 +42,18 @@ def processar_folder_link(folder, estilos):
     nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
     is_link_parceiros = "LINK PARCEIROS" in nome_folder.upper()
     
+    # Define a cor com base no nome da pasta
+    if "AMARELO" in nome_folder.upper():
+        color = "yellow"
+    elif "VERDE" in nome_folder.upper():
+        color = "green"
+    else:
+        color = "blue"  # Cor padrão para "LINK"
+    
     # Se for "LINK PARCEIROS", processa diretamente as LineString
     if is_link_parceiros:
         for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
             nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
-            color = "red"  # Cor vermelha para "LINK PARCEIROS"
             
             for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
                 coordinates = line_string.coordinates.text.strip().split()
@@ -73,7 +79,6 @@ def processar_folder_link(folder, estilos):
         # Processa as LineString dentro da subpasta
         for placemark in subfolder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
             nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
-            color = "blue"  # Cor padrão para "LINK"
             
             # Usa a cor definida no estilo
             style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
@@ -488,7 +493,7 @@ if uploaded_file is not None:
             # Adiciona a LineString ao mapa
             folium.PolyLine(
                 coordinates,
-                color=color,  # Cor da linha
+                color=color,  # Cor da linha (já definida com base no nome da pasta)
                 weight=weight,  # Espessura da linha
                 opacity=0.7,  # Opacidade da linha
                 dash_array=dash_array,  # Aplica o tracejado apenas para "EM ANDAMENTO"
