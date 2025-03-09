@@ -480,17 +480,19 @@ if uploaded_file is not None:
             # Define o estilo da linha
             if line_style == "dashed":
                 dash_array = "10, 10"  # Tracejado mais perceptível
-                weight = 4  # Espessura maior para destacar
+                weight = 5  # Espessura maior para destacar
+                opacity = 0.9  # Opacidade reduzida para evitar efeito de linha clara
             else:
                 dash_array = None  # Linha sólida
-                weight = 3  # Espessura padrão
+                weight = 4  # Espessura padrão
+                opacity = 1.0  # Opacidade total para linhas sólidas
             
             # Adiciona a LineString ao mapa
             folium.PolyLine(
                 coordinates,
                 color=color,  # Cor da linha
                 weight=weight,  # Espessura da linha
-                opacity=0.7,  # Opacidade da linha
+                opacity=opacity,  # Opacidade da linha
                 dash_array=dash_array,  # Aplica o tracejado apenas para "EM ANDAMENTO"
                 tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"
             ).add_to(mapa)
