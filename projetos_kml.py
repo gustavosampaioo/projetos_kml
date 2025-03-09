@@ -481,7 +481,7 @@ if uploaded_file is not None:
             if line_style == "dashed":
                 dash_array = "10, 10"  # Tracejado mais perceptível
                 weight = 5  # Espessura maior para destacar
-                opacity = 0.9  # Opacidade reduzida para evitar efeito de linha clara
+                opacity = 0.4  # Opacidade reduzida para evitar efeito de linha clara
             else:
                 dash_array = None  # Linha sólida
                 weight = 4  # Espessura padrão
