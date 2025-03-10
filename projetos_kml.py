@@ -520,10 +520,6 @@ def criar_grafico_pizza_porcentagem_concluida(porcentagens):
         # Exibe o gráfico no Streamlit
         st.plotly_chart(fig)
 
-# Substitua a chamada da função original pela nova função
-# criar_grafico_porcentagem_concluida(porcentagens_concluidas)
-criar_grafico_pizza_porcentagem_concluida(porcentagens_concluidas)
-
 
 # Configuração do aplicativo Streamlit
 st.title("Analisador de Projetos de Fibra Ótica")
@@ -792,7 +788,7 @@ if uploaded_file is not None:
     porcentagens_concluidas = calcular_porcentagem_concluida(dados_por_pasta, dados_concluido)
     
     # Cria o gráfico de porcentagem concluída
-    grafico_porcentagem = criar_grafico_porcentagem_concluida(porcentagens_concluidas)
+    grafico_porcentagem = criar_grafico_pizza_porcentagem_concluida(porcentagens_concluidas)
     
     # Exibe o gráfico no Streamlit
     st.subheader("Porcentagem Concluída por Pasta")
