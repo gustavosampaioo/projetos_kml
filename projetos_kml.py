@@ -248,9 +248,6 @@ def processar_kml(caminho_arquivo):
                 # Adiciona a subpasta do primeiro nível aos dados da pasta GPON
                 dados_gpon[nome_folder]["primeiro_nivel"].append(dados_subpasta)
 
-            # Verificação dos dados
-        print("Dados por pasta:", dados_por_pasta)
-        print("Dados concluídos:", dados_concluido)
     
     return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros
 
@@ -531,6 +528,10 @@ if uploaded_file is not None:
     
     # Processa o KML (desempacota todos os 8 valores retornados)
     distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros = processar_kml("temp.kml")
+
+    # Verificação de saída
+    print("Dados por pasta:", dados_por_pasta)
+    print("Dados concluídos:", dados_concluido)
     
     # Exibe o mapa e outras informações
     st.subheader("Mapa do Link entre Cidades")
