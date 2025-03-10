@@ -665,9 +665,9 @@ if uploaded_file is not None:
         print("Dados por pasta:", dados_por_pasta)
         print("Dados concluídos:", dados_concluido)
 
-        # Verificação da porcentagem
-        for nome_folder, porcentagem in porcentagens_concluidas.items():
-            print(f"Pasta: {nome_folder}, Porcentagem Concluída: {porcentagem}%")
+    # Verificação da porcentagem
+    for nome_folder, porcentagem in porcentagens_concluidas.items():
+        print(f"Pasta: {nome_folder}, Porcentagem Concluída: {porcentagem}%")
 
 
         # Calcula a porcentagem concluída por pasta
