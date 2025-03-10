@@ -176,7 +176,6 @@ def processar_gpon(root):
     
     return dados_gpon
 
-# Função para processar o KML e calcular distâncias
 def processar_kml(caminho_arquivo):
     with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
         root = parser.parse(arquivo).getroot()
@@ -190,6 +189,9 @@ def processar_kml(caminho_arquivo):
     dados_concluido = []
     dados_link_parceiros = []  # Lista para armazenar dados dos LINK PARCEIROS
     dados_gpon = {}
+    
+    # Conjunto para rastrear Placemarks já processados
+    placemarks_processados = set()
     
     for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
         nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
@@ -213,12 +215,14 @@ def processar_kml(caminho_arquivo):
         if "CIDADES" in nome_folder.upper():
             for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
                 nome = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
-                point = placemark.find(".//{http://www.opengis.net/kml/2.2}Point")
-                if point is not None:
-                    coords = point.coordinates.text.strip().split(',')
-                    lon = float(coords[0])
-                    lat = float(coords[1])
-                    cidades_coords.append((nome, (lat, lon)))
+                if nome not in placemarks_processados:  # Verifica se o Placemark já foi processado
+                    placemarks_processados.add(nome)  # Adiciona o Placemark ao conjunto de processados
+                    point = placemark.find(".//{http://www.opengis.net/kml/2.2}Point")
+                    if point is not None:
+                        coords = point.coordinates.text.strip().split(',')
+                        lon = float(coords[0])
+                        lat = float(coords[1])
+                        cidades_coords.append((nome, (lat, lon)))
         
         # Processa pastas GPON
         if "GPON" in nome_folder.upper():
@@ -233,11 +237,13 @@ def processar_kml(caminho_arquivo):
                 
                 # Processa as LineStrings dentro da subpasta
                 for placemark in subpasta.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
-                    for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
-                        coordinates = line_string.coordinates.text.strip().split()
-                        coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
-                        distancia = calcular_distancia_linestring(coordinates)
-                        dados_subpasta["linestrings"].append((placemark.name.text if hasattr(placemark, 'name') else "Sem Nome", distancia))
+                    if placemark.name.text not in placemarks_processados:  # Verifica se o Placemark já foi processado
+                        placemarks_processados.add(placemark.name.text)  # Adiciona o Placemark ao conjunto de processados
+                        for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
+                            coordinates = line_string.coordinates.text.strip().split()
+                            coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
+                            distancia = calcular_distancia_linestring(coordinates)
+                            dados_subpasta["linestrings"].append((placemark.name.text if hasattr(placemark, 'name') else "Sem Nome", distancia))
                 
                 # Adiciona a subpasta do primeiro nível aos dados da pasta GPON
                 dados_gpon[nome_folder]["primeiro_nivel"].append(dados_subpasta)
@@ -458,7 +464,6 @@ def criar_tabela_interativa_gpon(dados_gpon):
                         st.write("#### Rotas e CTO's")
                         st.dataframe(df_tabela_rotas)
 
-#verificar codigo
 def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
     porcentagens = {}
     
@@ -467,7 +472,7 @@ def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
     print("Dados concluídos:", dados_concluido)
    
     # Itera sobre as pastas e calcula a porcentagem concluída
-    for nome_folder, (distancia_total, _) in dados_por_pasta.items():
+    for nome_folder, (distancia_total, dados) in dados_por_pasta.items():
         # Filtra os dados concluídos para a pasta atual
         distancia_concluida = sum(linha[2] for linha in dados_concluido if linha[0] == nome_folder)
         
