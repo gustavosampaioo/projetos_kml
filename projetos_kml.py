@@ -624,10 +624,8 @@ if uploaded_file is not None:
     # Dicionário para armazenar subtotais por pasta
     subtotais_pastas = {}
     
-    # Armazena os dados de dados_por_pasta em uma variável para evitar duplicidade
-    dados_pastas = dados_por_pasta.items()
-    
-    for nome_folder, (distancia_folder, dados) in dados_pastas:
+    # Itera sobre os itens do dicionário dados_por_pasta
+    for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
         subtotal_pasta = 0.0
         for linha in dados:
             dados_tabela_pastas.append([nome_folder, linha[1], linha[2]])
@@ -660,22 +658,16 @@ if uploaded_file is not None:
     
     # Exibe a tabela
     st.dataframe(df_tabela_pastas)
-
-
-    #verificar codigo
-    # Adiciona a funcionalidade ao Streamlit
-    if uploaded_file is not None:
-
-        # Calcula a porcentagem concluída por pasta
-        porcentagens_concluidas = calcular_porcentagem_concluida(dados_pastas, dados_concluido)
- 
-        # Cria o gráfico de porcentagem concluída
-        grafico_porcentagem = criar_grafico_porcentagem_concluida(porcentagens_concluidas)
     
-        # Exibe o gráfico no Streamlit
-        st.subheader("Porcentagem Concluída por Pasta")
-        st.plotly_chart(grafico_porcentagem)
-    #até aqui
+    # Calcula a porcentagem concluída por pasta
+    porcentagens_concluidas = calcular_porcentagem_concluida(dados_por_pasta, dados_concluido)
+    
+    # Cria o gráfico de porcentagem concluída
+    grafico_porcentagem = criar_grafico_porcentagem_concluida(porcentagens_concluidas)
+    
+    # Exibe o gráfico no Streamlit
+    st.subheader("Porcentagem Concluída por Pasta")
+    st.plotly_chart(grafico_porcentagem)
 
     # Exibe tabelas para pastas "EM ANDAMENTO" e "CONCLUÍDO"
     if dados_em_andamento or dados_concluido:
