@@ -661,9 +661,9 @@ if uploaded_file is not None:
     if uploaded_file is not None:
 
 
-        # Verificação dos dados
-        print("Dados por pasta:", dados_por_pasta)
-        print("Dados concluídos:", dados_concluido)
+    # Verificação dos dados
+    print("Dados por pasta:", dados_por_pasta)
+    print("Dados concluídos:", dados_concluido)
 
     # Verificação da porcentagem
     for nome_folder, porcentagem in porcentagens_concluidas.items():
