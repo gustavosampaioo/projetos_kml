@@ -499,14 +499,14 @@ def criar_grafico_pizza_porcentagem_concluida(porcentagens):
     # Cria uma lista de pastas para o selectbox
     pastas = list(porcentagens.keys())
     
-    # Adiciona uma opção "Todas as Pastas" no início da lista
-    pastas.insert(0, "Todas as Pastas")
+    # Adiciona uma opção "Todos os Projetos" no início da lista
+    pastas.insert(0, "Todas os Projetos")
     
     # Cria um selectbox para o usuário escolher a pasta
     pasta_selecionada = st.selectbox("Selecione a pasta para visualizar o gráfico:", pastas)
     
-    # Verifica se o usuário selecionou "Todas as Pastas"
-    if pasta_selecionada == "Todas as Pastas":
+    # Verifica se o usuário selecionou "Todas os Projetos"
+    if pasta_selecionada == "Todas os Projetos":
         # Itera sobre todas as pastas e exibe um gráfico para cada uma
         for pasta, porcentagem in porcentagens.items():
             # Calcula a porcentagem não concluída
