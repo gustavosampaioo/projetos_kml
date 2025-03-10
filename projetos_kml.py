@@ -660,16 +660,6 @@ if uploaded_file is not None:
     # Adiciona a funcionalidade ao Streamlit
     if uploaded_file is not None:
 
-
-    # Verificação dos dados
-    print("Dados por pasta:", dados_por_pasta)
-    print("Dados concluídos:", dados_concluido)
-
-    # Verificação da porcentagem
-    for nome_folder, porcentagem in porcentagens_concluidas.items():
-        print(f"Pasta: {nome_folder}, Porcentagem Concluída: {porcentagem}%")
-
-
         # Calcula a porcentagem concluída por pasta
         porcentagens_concluidas = calcular_porcentagem_concluida(dados_por_pasta, dados_concluido)
     
