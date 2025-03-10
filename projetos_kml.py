@@ -646,6 +646,13 @@ if uploaded_file is not None:
         # Armazena o subtotal da pasta
         subtotais_pastas[nome_folder] = subtotal_pasta
     
+    # Adiciona os dados de "EM ANDAMENTO" e "CONCLUÍDO" à tabela principal
+    for linha in dados_em_andamento:
+        dados_tabela_pastas.append([linha[0], linha[1], linha[2]])
+    
+    for linha in dados_concluido:
+        dados_tabela_pastas.append([linha[0], linha[1], linha[2]])
+    
     # Adiciona as linhas de subtotal por pasta
     for nome_folder, subtotal in subtotais_pastas.items():
         dados_tabela_pastas.append([nome_folder, "Subtotal", subtotal])
