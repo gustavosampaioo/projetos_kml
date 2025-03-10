@@ -549,7 +549,7 @@ if uploaded_file is not None:
             
             # Define o estilo da linha
             if line_style == "dashed":
-                dash_array = "10, 10"  # Tracejado mais perceptível
+                dash_array = "7, 7"  # Tracejado mais perceptível
                 weight = 4  # Espessura maior para destacar
                 opacity = 1.0  # Opacidade total (sem linha de fundo)
             else:
