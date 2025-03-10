@@ -458,6 +458,62 @@ def criar_tabela_interativa_gpon(dados_gpon):
                         st.write("#### Rotas e CTO's")
                         st.dataframe(df_tabela_rotas)
 
+# Função para calcular a porcentagem concluída por pasta
+def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
+    porcentagens = {}
+    
+    # Itera sobre as pastas e calcula a porcentagem concluída
+    for nome_folder, (distancia_total, _) in dados_por_pasta.items():
+        # Filtra os dados concluídos para a pasta atual
+        distancia_concluida = sum(linha[2] for linha in dados_concluido if linha[0] == nome_folder)
+        
+        # Calcula a porcentagem concluída
+        if distancia_total > 0:
+            porcentagem = (distancia_concluida / distancia_total) * 100
+        else:
+            porcentagem = 0.0
+        
+        porcentagens[nome_folder] = porcentagem
+    
+    return porcentagens
+
+# Função para criar o gráfico de porcentagem concluída
+def criar_grafico_porcentagem_concluida(porcentagens):
+    # Cria um DataFrame a partir do dicionário de porcentagens
+    df_porcentagens = pd.DataFrame(list(porcentagens.items()), columns=["Pasta", "Porcentagem Concluída"])
+    
+    # Cria o gráfico de barras
+    fig = px.bar(
+        df_porcentagens,
+        x="Pasta",
+        y="Porcentagem Concluída",
+        title="Porcentagem Concluída por Pasta",
+        labels={"Porcentagem Concluída": "Porcentagem Concluída (%)"},
+        text_auto=True  # Exibe os valores nas barras
+    )
+    
+    # Ajusta o layout do gráfico
+    fig.update_traces(textposition='outside')
+    fig.update_layout(
+        xaxis_title="Pasta",
+        yaxis_title="Porcentagem Concluída (%)",
+        yaxis_range=[0, 100]  # Define o limite do eixo Y de 0% a 100%
+    )
+    
+    return fig
+
+# Adiciona a funcionalidade ao Streamlit
+if uploaded_file is not None:
+    # Calcula a porcentagem concluída por pasta
+    porcentagens_concluidas = calcular_porcentagem_concluida(dados_por_pasta, dados_concluido)
+    
+    # Cria o gráfico de porcentagem concluída
+    grafico_porcentagem = criar_grafico_porcentagem_concluida(porcentagens_concluidas)
+    
+    # Exibe o gráfico no Streamlit
+    st.subheader("Porcentagem Concluída por Pasta")
+    st.plotly_chart(grafico_porcentagem)
+
 
 # Configuração do aplicativo Streamlit
 st.title("Analisador de Projetos")
