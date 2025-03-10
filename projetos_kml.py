@@ -247,6 +247,10 @@ def processar_kml(caminho_arquivo):
                 
                 # Adiciona a subpasta do primeiro nível aos dados da pasta GPON
                 dados_gpon[nome_folder]["primeiro_nivel"].append(dados_subpasta)
+
+            # Verificação dos dados
+        print("Dados por pasta:", dados_por_pasta)
+        print("Dados concluídos:", dados_concluido)
     
     return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros
 
@@ -474,9 +478,7 @@ def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
         # Filtra os dados concluídos para a pasta atual
         distancia_concluida = sum(linha[2] for linha in dados_concluido if linha[0] == nome_folder)
 
-        # Verificação dos dados
-        print("Dados por pasta:", dados_por_pasta)
-        print("Dados concluídos:", dados_concluido)
+
         
         # Verifica se a distância total é maior que zero para evitar divisão por zero
         if distancia_total > 0:
