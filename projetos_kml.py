@@ -458,10 +458,14 @@ def criar_tabela_interativa_gpon(dados_gpon):
                         st.write("#### Rotas e CTO's")
                         st.dataframe(df_tabela_rotas)
 
-# Função para calcular a porcentagem concluída corretamente
+#verificar codigo
 def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
     porcentagens = {}
     
+    # Verificação dos dados
+    print("Dados por pasta:", dados_por_pasta)
+    print("Dados concluídos:", dados_concluido)
+   
     # Itera sobre as pastas e calcula a porcentagem concluída
     for nome_folder, (distancia_total, _) in dados_por_pasta.items():
         # Filtra os dados concluídos para a pasta atual
@@ -502,7 +506,6 @@ def criar_grafico_porcentagem_concluida(porcentagens):
     )
     
     return fig
-
 
 
 # Configuração do aplicativo Streamlit
@@ -656,17 +659,20 @@ if uploaded_file is not None:
     st.dataframe(df_tabela_pastas)
 
 
+    #verificar codigo
     # Adiciona a funcionalidade ao Streamlit
     if uploaded_file is not None:
+
         # Calcula a porcentagem concluída por pasta
         porcentagens_concluidas = calcular_porcentagem_concluida(dados_por_pasta, dados_concluido)
-        
+    
         # Cria o gráfico de porcentagem concluída
         grafico_porcentagem = criar_grafico_porcentagem_concluida(porcentagens_concluidas)
-        
+    
         # Exibe o gráfico no Streamlit
         st.subheader("Porcentagem Concluída por Pasta")
         st.plotly_chart(grafico_porcentagem)
+    #até aqui
 
     # Exibe tabelas para pastas "EM ANDAMENTO" e "CONCLUÍDO"
     if dados_em_andamento or dados_concluido:
