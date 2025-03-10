@@ -40,6 +40,9 @@ def processar_folder_link(folder, estilos):
     dados_em_andamento = []
     dados_concluido = []
     
+    # Conjunto para rastrear Placemarks já processados
+    placemarks_processados = set()
+    
     # Verifica se o nome da pasta contém "LINK PARCEIROS"
     nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
     is_link_parceiros = "LINK PARCEIROS" in nome_folder.upper()
@@ -58,6 +61,11 @@ def processar_folder_link(folder, estilos):
     if is_link_parceiros:
         for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
             nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
+            
+            # Verifica se o Placemark já foi processado
+            if nome_placemark in placemarks_processados:
+                continue  # Pula o Placemark se já foi processado
+            placemarks_processados.add(nome_placemark)  # Marca o Placemark como processado
             
             for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
                 coordinates = line_string.coordinates.text.strip().split()
@@ -83,6 +91,11 @@ def processar_folder_link(folder, estilos):
         # Processa as LineString dentro da subpasta
         for placemark in subfolder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
             nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
+            
+            # Verifica se o Placemark já foi processado
+            if nome_placemark in placemarks_processados:
+                continue  # Pula o Placemark se já foi processado
+            placemarks_processados.add(nome_placemark)  # Marca o Placemark como processado
             
             # Usa a cor definida no estilo
             style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
@@ -190,11 +203,16 @@ def processar_kml(caminho_arquivo):
     dados_link_parceiros = []  # Lista para armazenar dados dos LINK PARCEIROS
     dados_gpon = {}
     
-    # Conjunto para rastrear Placemarks já processados
-    placemarks_processados = set()
+    # Conjunto para rastrear pastas já processadas
+    pastas_processadas = set()
     
     for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
         nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
+        
+        # Verifica se a pasta já foi processada
+        if nome_folder in pastas_processadas:
+            continue  # Pula a pasta se já foi processada
+        pastas_processadas.add(nome_folder)  # Marca a pasta como processada
         
         # Processa pastas LINK e LINK PARCEIROS
         if "LINK" in nome_folder.upper():
@@ -215,14 +233,12 @@ def processar_kml(caminho_arquivo):
         if "CIDADES" in nome_folder.upper():
             for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
                 nome = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
-                if nome not in placemarks_processados:  # Verifica se o Placemark já foi processado
-                    placemarks_processados.add(nome)  # Adiciona o Placemark ao conjunto de processados
-                    point = placemark.find(".//{http://www.opengis.net/kml/2.2}Point")
-                    if point is not None:
-                        coords = point.coordinates.text.strip().split(',')
-                        lon = float(coords[0])
-                        lat = float(coords[1])
-                        cidades_coords.append((nome, (lat, lon)))
+                point = placemark.find(".//{http://www.opengis.net/kml/2.2}Point")
+                if point is not None:
+                    coords = point.coordinates.text.strip().split(',')
+                    lon = float(coords[0])
+                    lat = float(coords[1])
+                    cidades_coords.append((nome, (lat, lon)))
         
         # Processa pastas GPON
         if "GPON" in nome_folder.upper():
@@ -237,17 +253,14 @@ def processar_kml(caminho_arquivo):
                 
                 # Processa as LineStrings dentro da subpasta
                 for placemark in subpasta.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
-                    if placemark.name.text not in placemarks_processados:  # Verifica se o Placemark já foi processado
-                        placemarks_processados.add(placemark.name.text)  # Adiciona o Placemark ao conjunto de processados
-                        for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
-                            coordinates = line_string.coordinates.text.strip().split()
-                            coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
-                            distancia = calcular_distancia_linestring(coordinates)
-                            dados_subpasta["linestrings"].append((placemark.name.text if hasattr(placemark, 'name') else "Sem Nome", distancia))
+                    for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
+                        coordinates = line_string.coordinates.text.strip().split()
+                        coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
+                        distancia = calcular_distancia_linestring(coordinates)
+                        dados_subpasta["linestrings"].append((placemark.name.text if hasattr(placemark, 'name') else "Sem Nome", distancia))
                 
                 # Adiciona a subpasta do primeiro nível aos dados da pasta GPON
                 dados_gpon[nome_folder]["primeiro_nivel"].append(dados_subpasta)
-
     
     return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros
 
