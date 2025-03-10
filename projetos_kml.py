@@ -40,9 +40,6 @@ def processar_folder_link(folder, estilos):
     dados_em_andamento = []
     dados_concluido = []
     
-    # Conjunto para rastrear Placemarks já processados
-    placemarks_processados = set()
-    
     # Verifica se o nome da pasta contém "LINK PARCEIROS"
     nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
     is_link_parceiros = "LINK PARCEIROS" in nome_folder.upper()
@@ -61,11 +58,6 @@ def processar_folder_link(folder, estilos):
     if is_link_parceiros:
         for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
             nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
-            
-            # Verifica se o Placemark já foi processado
-            if nome_placemark in placemarks_processados:
-                continue  # Pula o Placemark se já foi processado
-            placemarks_processados.add(nome_placemark)  # Marca o Placemark como processado
             
             for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
                 coordinates = line_string.coordinates.text.strip().split()
@@ -91,11 +83,6 @@ def processar_folder_link(folder, estilos):
         # Processa as LineString dentro da subpasta
         for placemark in subfolder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
             nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
-            
-            # Verifica se o Placemark já foi processado
-            if nome_placemark in placemarks_processados:
-                continue  # Pula o Placemark se já foi processado
-            placemarks_processados.add(nome_placemark)  # Marca o Placemark como processado
             
             # Usa a cor definida no estilo
             style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
@@ -189,6 +176,7 @@ def processar_gpon(root):
     
     return dados_gpon
 
+# Função para processar o KML e calcular distâncias
 def processar_kml(caminho_arquivo):
     with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
         root = parser.parse(arquivo).getroot()
@@ -203,16 +191,8 @@ def processar_kml(caminho_arquivo):
     dados_link_parceiros = []  # Lista para armazenar dados dos LINK PARCEIROS
     dados_gpon = {}
     
-    # Conjunto para rastrear pastas já processadas
-    pastas_processadas = set()
-    
     for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
         nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
-        
-        # Verifica se a pasta já foi processada
-        if nome_folder in pastas_processadas:
-            continue  # Pula a pasta se já foi processada
-        pastas_processadas.add(nome_folder)  # Marca a pasta como processada
         
         # Processa pastas LINK e LINK PARCEIROS
         if "LINK" in nome_folder.upper():
@@ -478,17 +458,18 @@ def criar_tabela_interativa_gpon(dados_gpon):
                         st.write("#### Rotas e CTO's")
                         st.dataframe(df_tabela_rotas)
 
+#verificar codigo
 def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
     porcentagens = {}
     
-
+    # Verificação dos dados
+    print("Dados por pasta:", dados_por_pasta)
+    print("Dados concluídos:", dados_concluido)
    
     # Itera sobre as pastas e calcula a porcentagem concluída
-    for nome_folder, (distancia_total, dados) in dados_por_pasta.items():
+    for nome_folder, (distancia_total, _) in dados_por_pasta.items():
         # Filtra os dados concluídos para a pasta atual
         distancia_concluida = sum(linha[2] for linha in dados_concluido if linha[0] == nome_folder)
-
-
         
         # Verifica se a distância total é maior que zero para evitar divisão por zero
         if distancia_total > 0:
@@ -541,10 +522,6 @@ if uploaded_file is not None:
     
     # Processa o KML (desempacota todos os 8 valores retornados)
     distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros = processar_kml("temp.kml")
-
-    # Verificação de saída
-    print("Dados por pasta:", dados_por_pasta)
-    print("Dados concluídos:", dados_concluido)
     
     # Exibe o mapa e outras informações
     st.subheader("Mapa do Link entre Cidades")
@@ -647,7 +624,10 @@ if uploaded_file is not None:
     # Dicionário para armazenar subtotais por pasta
     subtotais_pastas = {}
     
-    for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
+    # Armazena os dados de dados_por_pasta em uma variável para evitar duplicidade
+    dados_pastas = dados_por_pasta.items()
+    
+    for nome_folder, (distancia_folder, dados) in dados_pastas:
         subtotal_pasta = 0.0
         for linha in dados:
             dados_tabela_pastas.append([nome_folder, linha[1], linha[2]])
@@ -687,8 +667,8 @@ if uploaded_file is not None:
     if uploaded_file is not None:
 
         # Calcula a porcentagem concluída por pasta
-        porcentagens_concluidas = calcular_porcentagem_concluida(dados_por_pasta, dados_concluido)
-    
+        porcentagens_concluidas = calcular_porcentagem_concluida(dados_pastas, dados_concluido)
+ 
         # Cria o gráfico de porcentagem concluída
         grafico_porcentagem = criar_grafico_porcentagem_concluida(porcentagens_concluidas)
     
