@@ -554,8 +554,8 @@ if uploaded_file is not None:
                 opacity = 1.0  # Opacidade total (sem linha de fundo)
             else:
                 dash_array = None  # Linha sólida
-                weight = 3  # Espessura padrão
-                opacity = 0.7  # Opacidade padrão
+                weight = 4  # Espessura padrão
+                opacity = 1.0  # Opacidade padrão
             
             # Adiciona a LineString ao mapa
             folium.PolyLine(
