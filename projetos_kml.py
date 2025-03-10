@@ -461,6 +461,10 @@ def criar_tabela_interativa_gpon(dados_gpon):
 def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
     porcentagens = {}
     
+    # Verificação dos dados
+    print("Dados por pasta:", dados_por_pasta)
+    print("Dados concluídos:", dados_concluido)
+   
     # Itera sobre as pastas e calcula a porcentagem concluída
     for nome_folder, (distancia_total, _) in dados_por_pasta.items():
         # Filtra os dados concluídos para a pasta atual
@@ -477,9 +481,7 @@ def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
     
     return porcentagens
 
-# Verificação dos dados
-print("Dados por pasta:", dados_por_pasta)
-print("Dados concluídos:", dados_concluido)
+
 
 # Função para criar o gráfico de porcentagem concluída
 def criar_grafico_porcentagem_concluida(porcentagens):
