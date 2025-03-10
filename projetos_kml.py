@@ -448,255 +448,73 @@ def criar_grafico_porcentagem_concluida(porcentagens):
 
 # Configuração do aplicativo Streamlit
 st.title("Analisador de Projetos")
-st.write("Este aplicativo analisa um arquivo no formato .kml e imprime informações bem dinâmicas e interativas sobre o projetos de fibra ótica")
+st.write("Este aplicativo analisa um arquivo no formato .kml e imprime informações bem dinâmicas e interativas sobre os projetos de fibra ótica")
 
 # Upload do arquivo KML
 uploaded_file = st.file_uploader("Carregue um arquivo KML", type=["kml"])
 
 if uploaded_file is not None:
-    # Salva o arquivo temporariamente
     with open("temp.kml", "wb") as f:
         f.write(uploaded_file.getbuffer())
     
-    # Processa o KML (desempacota todos os 8 valores retornados)
+    # Processa o KML
     distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros = processar_kml("temp.kml")
     
-    # Exibe o mapa e outras informações
+    # Exibe o mapa
     st.subheader("Mapa do Link entre Cidades")
-    
-    # Cria o mapa Folium
     mapa = folium.Map(location=[-5.0892, -42.8016], zoom_start=5, tiles="Esri WorldImagery")
     
-    # Adiciona LineStrings e marcadores ao mapa
+    # Adiciona LineStrings e marcadores
     for nome_folder, coordenadas_folder in coordenadas_por_pasta.items():
         for nome_placemark, coordinates, color, line_style in coordenadas_folder:
-            # Calcula a distância da LineString
             distancia = calcular_distancia_linestring(coordinates)
-            
-            # Define o estilo da linha
-            if line_style == "dashed":
-                dash_array = "10, 10"  # Tracejado mais perceptível
-                weight = 4  # Espessura maior para destacar
-                opacity = 1.0  # Opacidade total (sem linha de fundo)
-            else:
-                dash_array = None  # Linha sólida
-                weight = 3  # Espessura padrão
-                opacity = 0.7  # Opacidade padrão
-            
-            # Adiciona a LineString ao mapa
-            folium.PolyLine(
-                coordinates,
-                color=color,  # Cor da linha
-                weight=weight,  # Espessura da linha
-                opacity=opacity,  # Opacidade da linha
-                dash_array=dash_array,  # Aplica o tracejado apenas para "EM ANDAMENTO"
-                tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros"
-            ).add_to(mapa)
+            dash_array = "10, 10" if line_style == "dashed" else None
+            weight = 4 if line_style == "dashed" else 3
+            opacity = 1.0 if line_style == "dashed" else 0.7
+            folium.PolyLine(coordinates, color=color, weight=weight, opacity=opacity, dash_array=dash_array, tooltip=f"{nome_folder} - {nome_placemark} | Distância: {distancia} metros").add_to(mapa)
     
-    # Adiciona marcadores das cidades ao mapa com ícone azul padrão redimensionado
     for nome_cidade, coords in cidades_coords:
-        casa_icon = CustomIcon(
-            icon_image="https://fontetelecom.com.br/infraestrutura/assets/img/logo/logo-1.png",  # URL de um ícone de casa
-            icon_size=(40, 20)  # Tamanho do ícone (largura, altura)
-        )
-        
-        folium.Marker(
-            location=coords,
-            tooltip=nome_cidade,
-            icon=casa_icon  # Usa o ícone personalizado
-        ).add_to(mapa)
+        casa_icon = CustomIcon(icon_image="https://fontetelecom.com.br/infraestrutura/assets/img/logo/logo-1.png", icon_size=(40, 20))
+        folium.Marker(location=coords, tooltip=nome_cidade, icon=casa_icon).add_to(mapa)
     
-    # Exibe o mapa no Streamlit
     folium_static(mapa)
     
-    # Exibe tabela para "LINK PARCEIROS"
+    # Exibe tabelas
     if dados_link_parceiros:
         st.subheader("ROTAS LINK PARCEIROS")
-        
-        # Cria o DataFrame para a tabela dos "LINK PARCEIROS"
-        df_link_parceiros = pd.DataFrame(
-            dados_link_parceiros,
-            columns=["Pasta", "Rota", "Distância (m)"]
-        )
-        
-        # Adiciona a coluna ID
+        df_link_parceiros = pd.DataFrame(dados_link_parceiros, columns=["Pasta", "Rota", "Distância (m)"])
         df_link_parceiros.insert(0, "ID", range(1, len(df_link_parceiros) + 1))
-        
-        # Calcula o subtotal por pasta
         subtotal_por_pasta = df_link_parceiros.groupby("Pasta")["Distância (m)"].sum().reset_index()
         subtotal_por_pasta.columns = ["Pasta", "Subtotal"]
-        
-        # Cria uma lista para armazenar as linhas da tabela
-        dados_tabela_link_parceiros = []
-        
-        # Adiciona todas as rotas primeiro
-        for _, rota in df_link_parceiros.iterrows():
-            dados_tabela_link_parceiros.append([rota["ID"], rota["Pasta"], rota["Rota"], rota["Distância (m)"]])
-        
-        # Adiciona os subtotais no final
+        dados_tabela_link_parceiros = df_link_parceiros.values.tolist()
         for _, subtotal in subtotal_por_pasta.iterrows():
             dados_tabela_link_parceiros.append(["", subtotal["Pasta"], "Subtotal", subtotal["Subtotal"]])
-        
-        # Calcula o total geral
         total_geral = df_link_parceiros["Distância (m)"].sum()
-        
-        # Adiciona a linha de total geral
         dados_tabela_link_parceiros.append(["", "Total", "", total_geral])
-        
-        # Cria o DataFrame final
-        df_tabela_final = pd.DataFrame(
-            dados_tabela_link_parceiros,
-            columns=["ID", "Pasta", "Rota", "Distância (m)"]
-        )
-        
-        # Define a coluna ID como índice do DataFrame
+        df_tabela_final = pd.DataFrame(dados_tabela_link_parceiros, columns=["ID", "Pasta", "Rota", "Distância (m)"])
         df_tabela_final.set_index("ID", inplace=True)
-        
-        # Exibe a tabela
         st.dataframe(df_tabela_final)
     
-    # Exibe tabelas para pastas LINK
     st.subheader("Quantidade de Fibra Ótica projetada - LINK")
     dados_tabela_pastas = []
-    
-    # Dicionário para armazenar subtotais por pasta
     subtotais_pastas = {}
-    
-    # Itera sobre os itens do dicionário dados_por_pasta
     for nome_folder, (distancia_folder, dados) in dados_por_pasta.items():
-        subtotal_pasta = 0.0
-        for linha in dados:
-            dados_tabela_pastas.append([nome_folder, linha[1], linha[2]])
-            subtotal_pasta += linha[2]
-        
-        # Armazena o subtotal da pasta
+        subtotal_pasta = sum(linha[2] for linha in dados)
         subtotais_pastas[nome_folder] = subtotal_pasta
-    
-    # Adiciona as linhas de subtotal por pasta
+        dados_tabela_pastas.extend([[nome_folder, linha[1], linha[2]] for linha in dados])
     for nome_folder, subtotal in subtotais_pastas.items():
         dados_tabela_pastas.append([nome_folder, "Subtotal", subtotal])
-    
-    # Cria o DataFrame
-    df_tabela_pastas = pd.DataFrame(
-        dados_tabela_pastas,
-        columns=["Pasta", "ROTAS LINK", "Distância (m)"]
-    )
-    
-    # Adiciona a coluna ID
+    df_tabela_pastas = pd.DataFrame(dados_tabela_pastas, columns=["Pasta", "ROTAS LINK", "Distância (m)"])
     df_tabela_pastas.insert(0, "ID", range(1, len(df_tabela_pastas) + 1))
-    
-    # Calcula o total geral
     total_distancia = df_tabela_pastas[df_tabela_pastas["ROTAS LINK"] != "Subtotal"]["Distância (m)"].sum()
-    
-    # Adiciona a linha de total geral
     df_tabela_pastas.loc["Total"] = ["", "Total", "", total_distancia]
-    
-    # Define a coluna ID como índice do DataFrame
     df_tabela_pastas.set_index("ID", inplace=True)
-    
-    # Exibe a tabela
     st.dataframe(df_tabela_pastas)
     
-    # Calcula a porcentagem concluída por pasta
     porcentagens_concluidas = calcular_porcentagem_concluida(dados_por_pasta, dados_concluido)
-    
-    # Cria o gráfico de porcentagem concluída
     grafico_porcentagem = criar_grafico_porcentagem_concluida(porcentagens_concluidas)
-    
-    # Exibe o gráfico no Streamlit
     st.subheader("Porcentagem Concluída por Pasta")
     st.plotly_chart(grafico_porcentagem)
-
-    # Exibe tabelas para pastas "EM ANDAMENTO" e "CONCLUÍDO"
-    if dados_em_andamento or dados_concluido:
-        st.subheader("Status das Rotas - LINK")
-        
-        # Tabela para "EM ANDAMENTO"
-        if dados_em_andamento:
-            st.write("#### Rotas em Andamento")
-            df_em_andamento = pd.DataFrame(
-                dados_em_andamento,
-                columns=["Pasta", "Rota", "Distância (m)"]
-            )
-            df_em_andamento.insert(0, "ID", range(1, len(df_em_andamento) + 1))
-            
-            # Calcula o subtotal por pasta
-            subtotal_em_andamento = df_em_andamento.groupby("Pasta")["Distância (m)"].sum().reset_index()
-            subtotal_em_andamento.columns = ["Pasta", "Subtotal"]
-            
-            # Cria uma lista para armazenar as linhas da tabela
-            dados_tabela_em_andamento = []
-            
-            # Adiciona todas as rotas primeiro
-            for _, rota in df_em_andamento.iterrows():
-                dados_tabela_em_andamento.append([rota["ID"], rota["Pasta"], rota["Rota"], rota["Distância (m)"]])
-            
-            # Adiciona os subtotais no final
-            for _, subtotal in subtotal_em_andamento.iterrows():
-                dados_tabela_em_andamento.append(["", subtotal["Pasta"], "Subtotal", subtotal["Subtotal"]])
-            
-            # Calcula o total geral
-            total_em_andamento = df_em_andamento["Distância (m)"].sum()
-            
-            # Adiciona a linha de total geral
-            dados_tabela_em_andamento.append(["", "Total", "", total_em_andamento])
-            
-            # Cria o DataFrame final
-            df_tabela_final_em_andamento = pd.DataFrame(
-                dados_tabela_em_andamento,
-                columns=["ID", "Pasta", "Rota", "Distância (m)"]
-            )
-            
-            # Define a coluna ID como índice do DataFrame
-            df_tabela_final_em_andamento.set_index("ID", inplace=True)
-            
-            # Exibe a tabela
-            st.dataframe(df_tabela_final_em_andamento)
-        
-        # Tabela para "CONCLUÍDO"
-        if dados_concluido:
-            st.write("#### Rotas Concluídas")
-            df_concluido = pd.DataFrame(
-                dados_concluido,
-                columns=["Pasta", "Rota", "Distância (m)"]
-            )
-            df_concluido.insert(0, "ID", range(1, len(df_concluido) + 1))
-            
-            # Calcula o subtotal por pasta
-            subtotal_concluido = df_concluido.groupby("Pasta")["Distância (m)"].sum().reset_index()
-            subtotal_concluido.columns = ["Pasta", "Subtotal"]
-            
-            # Cria uma lista para armazenar as linhas da tabela
-            dados_tabela_concluido = []
-            
-            # Adiciona todas as rotas primeiro
-            for _, rota in df_concluido.iterrows():
-                dados_tabela_concluido.append([rota["ID"], rota["Pasta"], rota["Rota"], rota["Distância (m)"]])
-            
-            # Adiciona os subtotais no final
-            for _, subtotal in subtotal_concluido.iterrows():
-                dados_tabela_concluido.append(["", subtotal["Pasta"], "Subtotal", subtotal["Subtotal"]])
-            
-            # Calcula o total geral
-            total_concluido = df_concluido["Distância (m)"].sum()
-            
-            # Adiciona a linha de total geral
-            dados_tabela_concluido.append(["", "Total", "", total_concluido])
-            
-            # Cria o DataFrame final
-            df_tabela_final_concluido = pd.DataFrame(
-                dados_tabela_concluido,
-                columns=["ID", "Pasta", "Rota", "Distância (m)"]
-            )
-            
-            # Define a coluna ID como índice do DataFrame
-            df_tabela_final_concluido.set_index("ID", inplace=True)
-            
-            # Exibe a tabela
-            st.dataframe(df_tabela_final_concluido)
     
-    # Exibe o dashboard GPON
     criar_dashboard_gpon(dados_gpon)
-    
-    # Exibe a tabela interativa
     criar_tabela_interativa_gpon(dados_gpon)
