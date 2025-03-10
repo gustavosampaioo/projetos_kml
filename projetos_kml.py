@@ -40,76 +40,26 @@ def processar_folder_link(folder, estilos):
     dados_em_andamento = []
     dados_concluido = []
     
-    # Verifica se o nome da pasta contém "LINK PARCEIROS"
     nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
     is_link_parceiros = "LINK PARCEIROS" in nome_folder.upper()
     
-    # Define a cor com base no nome da pasta
-    if is_link_parceiros:
-        color = "red"  # Cor vermelha para "LINK PARCEIROS"
-    elif "AMARELO" in nome_folder.upper():
-        color = "yellow"
-    elif "VERDE" in nome_folder.upper():
-        color = "green"
-    else:
-        color = "blue"  # Cor padrão para "LINK"
+    color_map = {"LINK PARCEIROS": "red", "AMARELO": "yellow", "VERDE": "green"}
+    color = next((color_map[key] for key in color_map if key in nome_folder.upper()), "blue")
     
-    # Se for "LINK PARCEIROS", processa diretamente as LineString
-    if is_link_parceiros:
-        for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
-            nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
-            
-            for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
-                coordinates = line_string.coordinates.text.strip().split()
-                coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
-                
-                distancia = calcular_distancia_linestring(coordinates)
-                distancia_folder += distancia
-                
-                # Adiciona as informações às listas correspondentes
-                dados.append([nome_folder, nome_placemark, distancia])  # Inclui o nome da pasta
-                coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para "LINK PARCEIROS"
+    for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
+        nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
         
-        return distancia_folder, dados, coordenadas_folder, [], [], is_link_parceiros
+        for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
+            coordinates = line_string.coordinates.text.strip().split()
+            coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
+            
+            distancia = calcular_distancia_linestring(coordinates)
+            distancia_folder += distancia
+            
+            dados.append([nome_folder, nome_placemark, distancia])
+            coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))
     
-    # Caso contrário, processa como pasta "LINK" normal
-    for subfolder in folder.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
-        subfolder_name = subfolder.name.text if hasattr(subfolder, 'name') else "Subpasta Desconhecida"
-        
-        # Verifica se a subpasta é "EM ANDAMENTO" ou "CONCLUÍDO"
-        is_em_andamento = "EM ANDAMENTO" in subfolder_name.upper()
-        is_concluido = "CONCLUÍDO" in subfolder_name.upper()
-        
-        # Processa as LineString dentro da subpasta
-        for placemark in subfolder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
-            nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
-            
-            # Usa a cor definida no estilo
-            style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
-            if style_url is not None:
-                style_id = style_url.text.strip().lstrip("#")
-                if style_id in estilos:
-                    color = estilos[style_id]
-            
-            for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
-                coordinates = line_string.coordinates.text.strip().split()
-                coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
-                
-                distancia = calcular_distancia_linestring(coordinates)
-                distancia_folder += distancia
-                
-                # Adiciona as informações às listas correspondentes
-                if is_em_andamento:
-                    dados_em_andamento.append([nome_folder, nome_placemark, distancia])
-                    coordenadas_folder.append((nome_placemark, coordinates, color, "dashed"))  # Tracejado para "EM ANDAMENTO"
-                elif is_concluido:
-                    dados_concluido.append([nome_folder, nome_placemark, distancia])
-                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para "CONCLUÍDO"
-                else:
-                    dados.append([nome_folder, nome_placemark, distancia])
-                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para outras pastas
-    
-    return distancia_folder, dados, coordenadas_folder, dados_em_andamento, dados_concluido, is_link_parceiros
+    return distancia_folder, dados, coordenadas_folder, is_link_parceiros
 
 
 
@@ -188,51 +138,39 @@ def processar_kml(caminho_arquivo):
     cidades_coords = []
     dados_em_andamento = []
     dados_concluido = []
-    dados_link_parceiros = []  # Lista para armazenar dados dos LINK PARCEIROS
+    dados_link_parceiros = []
     dados_gpon = {}
     
     for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
         nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
         
-        # Processa pastas LINK e LINK PARCEIROS
         if "LINK" in nome_folder.upper():
-            distancia_folder, dados, coordenadas_folder, em_andamento, concluido, is_link_parceiros = processar_folder_link(folder, estilos)
+            distancia_folder, dados, coordenadas_folder, is_link_parceiros = processar_folder_link(folder, estilos)
             distancia_total += distancia_folder
             
-            # Separa os dados dos "LINK PARCEIROS" dos dados da pasta "LINK"
             if is_link_parceiros:
                 dados_link_parceiros.extend(dados)
-                coordenadas_por_pasta[nome_folder] = coordenadas_folder
             else:
-                # Adiciona apenas os dados gerais (não "EM ANDAMENTO" ou "CONCLUÍDO") ao dicionário
                 dados_por_pasta[nome_folder] = (distancia_folder, dados)
-                coordenadas_por_pasta[nome_folder] = coordenadas_folder
-                dados_em_andamento.extend(em_andamento)
-                dados_concluido.extend(concluido)
+            
+            coordenadas_por_pasta[nome_folder] = coordenadas_folder
         
-        # Processa pastas que contenham "CIDADES" no nome
-        if "CIDADES" in nome_folder.upper():
+        elif "CIDADES" in nome_folder.upper():
             for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
                 nome = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
                 point = placemark.find(".//{http://www.opengis.net/kml/2.2}Point")
                 if point is not None:
                     coords = point.coordinates.text.strip().split(',')
-                    lon = float(coords[0])
-                    lat = float(coords[1])
-                    cidades_coords.append((nome, (lat, lon)))
+                    cidades_coords.append((nome, (float(coords[1]), float(coords[0]))))
         
-        # Processa pastas GPON
-        if "GPON" in nome_folder.upper():
+        elif "GPON" in nome_folder.upper():
             dados_gpon[nome_folder] = {"primeiro_nivel": []}
             
-            # Coleta todas as subpastas do primeiro nível após a pasta GPON
             for subpasta in folder.findall("{http://www.opengis.net/kml/2.2}Folder"):
                 nome_subpasta = subpasta.name.text if hasattr(subpasta, 'name') else "Subpasta Desconhecida"
                 
-                # Dados da subpasta do primeiro nível
                 dados_subpasta = {"nome": nome_subpasta, "ctos": buscar_ctos(subpasta), "linestrings": []}
                 
-                # Processa as LineStrings dentro da subpasta
                 for placemark in subpasta.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
                     for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
                         coordinates = line_string.coordinates.text.strip().split()
@@ -240,10 +178,9 @@ def processar_kml(caminho_arquivo):
                         distancia = calcular_distancia_linestring(coordinates)
                         dados_subpasta["linestrings"].append((placemark.name.text if hasattr(placemark, 'name') else "Sem Nome", distancia))
                 
-                # Adiciona a subpasta do primeiro nível aos dados da pasta GPON
                 dados_gpon[nome_folder]["primeiro_nivel"].append(dados_subpasta)
     
-    return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros
+    return distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_link_parceiros
 
 # Função para criar o dashboard GPON
 def criar_dashboard_gpon(dados_gpon):
