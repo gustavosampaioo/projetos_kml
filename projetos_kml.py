@@ -477,7 +477,9 @@ def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
     
     return porcentagens
 
-
+# Verificação dos dados
+print("Dados por pasta:", dados_por_pasta)
+print("Dados concluídos:", dados_concluido)
 
 # Função para criar o gráfico de porcentagem concluída
 def criar_grafico_porcentagem_concluida(porcentagens):
