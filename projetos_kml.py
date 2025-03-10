@@ -74,26 +74,41 @@ def processar_folder_link(folder, estilos):
         return distancia_folder, dados, coordenadas_folder, [], [], is_link_parceiros
     
     # Caso contrário, processa como pasta "LINK" normal
-    for placemark in folder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
-        nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
+    for subfolder in folder.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
+        subfolder_name = subfolder.name.text if hasattr(subfolder, 'name') else "Subpasta Desconhecida"
         
-        # Usa a cor definida no estilo
-        style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
-        if style_url is not None:
-            style_id = style_url.text.strip().lstrip("#")
-            if style_id in estilos:
-                color = estilos[style_id]
+        # Verifica se a subpasta é "EM ANDAMENTO" ou "CONCLUÍDO"
+        is_em_andamento = "EM ANDAMENTO" in subfolder_name.upper()
+        is_concluido = "CONCLUÍDO" in subfolder_name.upper()
         
-        for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
-            coordinates = line_string.coordinates.text.strip().split()
-            coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
+        # Processa as LineString dentro da subpasta
+        for placemark in subfolder.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
+            nome_placemark = placemark.name.text if hasattr(placemark, 'name') else "Sem Nome"
             
-            distancia = calcular_distancia_linestring(coordinates)
-            distancia_folder += distancia
+            # Usa a cor definida no estilo
+            style_url = placemark.find(".//{http://www.opengis.net/kml/2.2}styleUrl")
+            if style_url is not None:
+                style_id = style_url.text.strip().lstrip("#")
+                if style_id in estilos:
+                    color = estilos[style_id]
             
-            # Adiciona as informações às listas correspondentes
-            dados.append([nome_folder, nome_placemark, distancia])
-            coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para "LINK"
+            for line_string in placemark.findall(".//{http://www.opengis.net/kml/2.2}LineString"):
+                coordinates = line_string.coordinates.text.strip().split()
+                coordinates = [tuple(map(float, coord.split(',')[:2][::-1])) for coord in coordinates]
+                
+                distancia = calcular_distancia_linestring(coordinates)
+                distancia_folder += distancia
+                
+                # Adiciona as informações às listas correspondentes
+                if is_em_andamento:
+                    dados_em_andamento.append([nome_folder, nome_placemark, distancia])
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "dashed"))  # Tracejado para "EM ANDAMENTO"
+                elif is_concluido:
+                    dados_concluido.append([nome_folder, nome_placemark, distancia])
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para "CONCLUÍDO"
+                else:
+                    dados.append([nome_folder, nome_placemark, distancia])
+                    coordenadas_folder.append((nome_placemark, coordinates, color, "solid"))  # Sólido para outras pastas
     
     return distancia_folder, dados, coordenadas_folder, dados_em_andamento, dados_concluido, is_link_parceiros
 
@@ -657,17 +672,7 @@ if uploaded_file is not None:
     # Exibe a tabela
     st.dataframe(df_tabela_pastas)
     
-    # Calcula a porcentagem concluída por pasta
-    porcentagens_concluidas = calcular_porcentagem_concluida(dados_por_pasta, dados_concluido)
-    
-    # Cria o gráfico de porcentagem concluída
-    grafico_porcentagem = criar_grafico_porcentagem_concluida(porcentagens_concluidas)
-    
-    # Exibe o gráfico no Streamlit
-    st.subheader("Porcentagem Concluída por Pasta")
-    st.plotly_chart(grafico_porcentagem)
-
-    # Exibe tabelas para pastas "EM ANDAMENTO" e "CONCLUÍDO"
+    # Exibe tabelas para "EM ANDAMENTO" e "CONCLUÍDO"
     if dados_em_andamento or dados_concluido:
         st.subheader("Status das Rotas - LINK")
         
