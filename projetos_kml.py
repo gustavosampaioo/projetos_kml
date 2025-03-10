@@ -204,6 +204,7 @@ def processar_kml(caminho_arquivo):
                 dados_link_parceiros.extend(dados)
                 coordenadas_por_pasta[nome_folder] = coordenadas_folder
             else:
+                # Adiciona apenas os dados gerais (não "EM ANDAMENTO" ou "CONCLUÍDO") ao dicionário
                 dados_por_pasta[nome_folder] = (distancia_folder, dados)
                 coordenadas_por_pasta[nome_folder] = coordenadas_folder
                 dados_em_andamento.extend(em_andamento)
