@@ -790,10 +790,6 @@ if uploaded_file is not None:
     # Cria o gráfico de porcentagem concluída
     grafico_porcentagem = criar_grafico_pizza_porcentagem_concluida(porcentagens_concluidas)
     
-    # Exibe o gráfico no Streamlit
-    st.subheader("Porcentagem Concluída por Pasta")
-    st.plotly_chart(grafico_porcentagem)
-    
     # Exibe o dashboard GPON
     criar_dashboard_gpon(dados_gpon)
     
