@@ -502,18 +502,6 @@ def criar_grafico_porcentagem_concluida(porcentagens):
     
     return fig
 
-# Adiciona a funcionalidade ao Streamlit
-if uploaded_file is not None:
-    # Calcula a porcentagem concluída por pasta
-    porcentagens_concluidas = calcular_porcentagem_concluida(dados_por_pasta, dados_concluido)
-    
-    # Cria o gráfico de porcentagem concluída
-    grafico_porcentagem = criar_grafico_porcentagem_concluida(porcentagens_concluidas)
-    
-    # Exibe o gráfico no Streamlit
-    st.subheader("Porcentagem Concluída por Pasta")
-    st.plotly_chart(grafico_porcentagem)
-
 
 # Configuração do aplicativo Streamlit
 st.title("Analisador de Projetos")
@@ -664,10 +652,25 @@ if uploaded_file is not None:
     
     # Exibe a tabela
     st.dataframe(df_tabela_pastas)
+
+
+
+    # Adiciona a funcionalidade ao Streamlit
+    if uploaded_file is not None:
+        # Calcula a porcentagem concluída por pasta
+        porcentagens_concluidas = calcular_porcentagem_concluida(dados_por_pasta, dados_concluido)
     
+        # Cria o gráfico de porcentagem concluída
+        grafico_porcentagem = criar_grafico_porcentagem_concluida(porcentagens_concluidas)
+    
+        # Exibe o gráfico no Streamlit
+        st.subheader("Porcentagem Concluída por Pasta")
+        st.plotly_chart(grafico_porcentagem)
+
     # Exibe tabelas para pastas "EM ANDAMENTO" e "CONCLUÍDO"
     if dados_em_andamento or dados_concluido:
         st.subheader("Status das Rotas - LINK")
+
         
         # Tabela para "EM ANDAMENTO"
         if dados_em_andamento:
