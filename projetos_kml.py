@@ -494,11 +494,45 @@ def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
     
     return porcentagens
 
-# Função para criar o gráfico de pizza de porcentagem concluída
+# Função para criar o gráfico de pizza de porcentagem concluída com seleção de pasta
 def criar_grafico_pizza_porcentagem_concluida(porcentagens):
-    # Itera sobre as pastas e cria um gráfico de pizza para cada uma
-    for pasta, porcentagem in porcentagens.items():
-        # Calcula a porcentagem não concluída
+    # Cria uma lista de pastas para o selectbox
+    pastas = list(porcentagens.keys())
+    
+    # Adiciona uma opção "Todas as Pastas" no início da lista
+    pastas.insert(0, "Todas as Pastas")
+    
+    # Cria um selectbox para o usuário escolher a pasta
+    pasta_selecionada = st.selectbox("Selecione a pasta para visualizar o gráfico:", pastas)
+    
+    # Verifica se o usuário selecionou "Todas as Pastas"
+    if pasta_selecionada == "Todas as Pastas":
+        # Itera sobre todas as pastas e exibe um gráfico para cada uma
+        for pasta, porcentagem in porcentagens.items():
+            # Calcula a porcentagem não concluída
+            porcentagem_nao_concluida = 100 - porcentagem
+            
+            # Cria o DataFrame para o gráfico de pizza
+            df_pizza = pd.DataFrame({
+                "Status": ["Concluído", "Não Concluído"],
+                "Porcentagem": [porcentagem, porcentagem_nao_concluida]
+            })
+            
+            # Cria o gráfico de pizza
+            fig = px.pie(
+                df_pizza,
+                values="Porcentagem",
+                names="Status",
+                title=f"Porcentagem Concluída - {pasta}",
+                color="Status",
+                color_discrete_map={"Concluído": "green", "Não Concluído": "red"}
+            )
+            
+            # Exibe o gráfico no Streamlit
+            st.plotly_chart(fig)
+    else:
+        # Exibe apenas o gráfico da pasta selecionada
+        porcentagem = porcentagens[pasta_selecionada]
         porcentagem_nao_concluida = 100 - porcentagem
         
         # Cria o DataFrame para o gráfico de pizza
@@ -512,7 +546,7 @@ def criar_grafico_pizza_porcentagem_concluida(porcentagens):
             df_pizza,
             values="Porcentagem",
             names="Status",
-            title=f"Porcentagem Concluída - {pasta}",
+            title=f"Porcentagem Concluída - {pasta_selecionada}",
             color="Status",
             color_discrete_map={"Concluído": "green", "Não Concluído": "red"}
         )
