@@ -494,30 +494,35 @@ def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
     
     return porcentagens
 
-# Função para criar o gráfico de porcentagem concluída
-def criar_grafico_porcentagem_concluida(porcentagens):
-    # Cria um DataFrame a partir do dicionário de porcentagens
-    df_porcentagens = pd.DataFrame(list(porcentagens.items()), columns=["Pasta", "Porcentagem Concluída"])
-    
-    # Cria o gráfico de barras
-    fig = px.bar(
-        df_porcentagens,
-        x="Pasta",
-        y="Porcentagem Concluída",
-        title="Porcentagem Concluída por Pasta",
-        labels={"Porcentagem Concluída": "Porcentagem Concluída (%)"},
-        text_auto=True  # Exibe os valores nas barras
-    )
-    
-    # Ajusta o layout do gráfico
-    fig.update_traces(textposition='outside')
-    fig.update_layout(
-        xaxis_title="Pasta",
-        yaxis_title="Porcentagem Concluída (%)",
-        yaxis_range=[0, 100]  # Define o limite do eixo Y de 0% a 100%
-    )
-    
-    return fig
+# Função para criar o gráfico de pizza de porcentagem concluída
+def criar_grafico_pizza_porcentagem_concluida(porcentagens):
+    # Itera sobre as pastas e cria um gráfico de pizza para cada uma
+    for pasta, porcentagem in porcentagens.items():
+        # Calcula a porcentagem não concluída
+        porcentagem_nao_concluida = 100 - porcentagem
+        
+        # Cria o DataFrame para o gráfico de pizza
+        df_pizza = pd.DataFrame({
+            "Status": ["Concluído", "Não Concluído"],
+            "Porcentagem": [porcentagem, porcentagem_nao_concluida]
+        })
+        
+        # Cria o gráfico de pizza
+        fig = px.pie(
+            df_pizza,
+            values="Porcentagem",
+            names="Status",
+            title=f"Porcentagem Concluída - {pasta}",
+            color="Status",
+            color_discrete_map={"Concluído": "green", "Não Concluído": "red"}
+        )
+        
+        # Exibe o gráfico no Streamlit
+        st.plotly_chart(fig)
+
+# Substitua a chamada da função original pela nova função
+# criar_grafico_porcentagem_concluida(porcentagens_concluidas)
+criar_grafico_pizza_porcentagem_concluida(porcentagens_concluidas)
 
 
 # Configuração do aplicativo Streamlit
