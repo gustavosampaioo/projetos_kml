@@ -514,21 +514,35 @@ def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
     return porcentagens
 
 # Função para criar o gráfico de pizza de porcentagem concluída com seleção de pasta
-def criar_grafico_pizza_porcentagem_concluida(porcentagens):
-    # Cria uma lista de pastas para o selectbox
-    pastas = list(porcentagens.keys())
+def criar_grafico_pizza_porcentagem_concluida(porcentagens, dados_por_pasta):
+    # Filtra as pastas que não estão dentro de uma pasta "GPON"
+    pastas_filtradas = []
+    for nome_folder in porcentagens.keys():
+        # Verifica se a pasta está dentro de uma pasta "GPON"
+        is_dentro_gpon = False
+        for _, (_, dados) in dados_por_pasta.items():
+            for linha in dados:
+                if linha[0] == nome_folder and "GPON" in linha[0].upper():
+                    is_dentro_gpon = True
+                    break
+            if is_dentro_gpon:
+                break
+        
+        # Se a pasta não estiver dentro de uma pasta "GPON", adiciona à lista de pastas filtradas
+        if not is_dentro_gpon:
+            pastas_filtradas.append(nome_folder)
     
-    # Adiciona uma opção "Todos os Projetos" no início da lista
-    pastas.insert(0, "Todas os Projetos")
+    # Cria uma lista de opções para o selectbox (apenas pastas filtradas)
+    opcoes_pastas = ["Todas os Projetos"] + pastas_filtradas
     
-    # Cria um selectbox para o usuário escolher a pasta
-    pasta_selecionada = st.selectbox("Selecione a pasta para visualizar o gráfico:", pastas)
+    # Adiciona um selectbox para o usuário escolher a pasta
+    pasta_selecionada = st.selectbox("Selecione a pasta para visualizar o gráfico:", opcoes_pastas)
     
     # Verifica se o usuário selecionou "Todas os Projetos"
     if pasta_selecionada == "Todas os Projetos":
-        # Itera sobre todas as pastas e exibe um gráfico para cada uma
-        for pasta, porcentagem in porcentagens.items():
-            # Calcula a porcentagem não concluída
+        # Itera sobre todas as pastas filtradas e exibe um gráfico para cada uma
+        for pasta in pastas_filtradas:
+            porcentagem = porcentagens[pasta]
             porcentagem_nao_concluida = 100 - porcentagem
             
             # Cria o DataFrame para o gráfico de pizza
@@ -572,7 +586,6 @@ def criar_grafico_pizza_porcentagem_concluida(porcentagens):
         
         # Exibe o gráfico no Streamlit
         st.plotly_chart(fig)
-
 
 # Configuração do aplicativo Streamlit
 st.title("Analisador de Projetos de Fibra Ótica")
