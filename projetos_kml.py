@@ -852,12 +852,14 @@ if uploaded_file is not None:
             
             # Exibe a tabela
             st.dataframe(df_tabela_final_concluido)
+
+
     
     # Calcula a porcentagem concluída por pasta
     porcentagens_concluidas = calcular_porcentagem_concluida(dados_por_pasta, dados_concluido)
     
     # Cria o gráfico de porcentagem concluída
-    grafico_porcentagem = criar_grafico_pizza_porcentagem_concluida(porcentagens_concluidas)
+    grafico_porcentagem = criar_grafico_pizza_porcentagem_concluida(porcentagens_concluidas, dados_por_pasta)
     
     # Exibe o dashboard GPON
     criar_dashboard_gpon(dados_gpon)
