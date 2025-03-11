@@ -514,17 +514,22 @@ def calcular_porcentagem_concluida(dados_por_pasta, dados_concluido):
     return porcentagens
 
 # Função para criar o gráfico de pizza de porcentagem concluída com seleção de pasta
-def criar_grafico_pizza_porcentagem_concluida(porcentagens, dados_por_pasta):
+def criar_grafico_pizza_porcentagem_concluida(porcentagens, dados_por_pasta, root):
     # Função auxiliar para verificar se uma pasta está dentro de "GPON"
-    def esta_dentro_gpon(pasta, dados_por_pasta):
-        for _, (_, dados) in dados_por_pasta.items():
-            for linha in dados:
-                if linha[0] == pasta and "GPON" in linha[0].upper():
-                    return True
+    def esta_dentro_gpon(pasta, root):
+        # Percorre a hierarquia do KML para verificar se a pasta está dentro de "GPON"
+        for folder in root.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
+            nome_folder = folder.name.text if hasattr(folder, 'name') else "Desconhecido"
+            if "GPON" in nome_folder.upper():
+                # Verifica se a pasta "LINK" está dentro desta pasta "GPON"
+                for subfolder in folder.findall(".//{http://www.opengis.net/kml/2.2}Folder"):
+                    subfolder_name = subfolder.name.text if hasattr(subfolder, 'name') else "Subpasta Desconhecida"
+                    if subfolder_name == pasta:
+                        return True
         return False
 
     # Filtra as pastas que não estão dentro de uma pasta "GPON"
-    pastas_filtradas = [pasta for pasta in porcentagens.keys() if not esta_dentro_gpon(pasta, dados_por_pasta)]
+    pastas_filtradas = [pasta for pasta in porcentagens.keys() if not esta_dentro_gpon(pasta, root)]
 
     # Cria uma lista de opções para o selectbox (apenas pastas filtradas)
     opcoes_pastas = ["Todas os Projetos"] + pastas_filtradas
