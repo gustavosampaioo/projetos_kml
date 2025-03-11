@@ -852,7 +852,9 @@ if uploaded_file is not None:
             # Exibe a tabela
             st.dataframe(df_tabela_final_concluido)
 
-
+    # Obtém o root do KML
+    with open("temp.kml", 'r', encoding='utf-8') as arquivo:
+        root = parser.parse(arquivo).getroot()
     
     # Calcula a porcentagem concluída por pasta
     porcentagens_concluidas = calcular_porcentagem_concluida(dados_por_pasta, dados_concluido)
