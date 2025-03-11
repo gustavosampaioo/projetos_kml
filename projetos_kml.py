@@ -18,16 +18,7 @@ def validar_kml(caminho_arquivo):
         st.error(f"Erro de sintaxe no arquivo KML: {e}")
         return False
 
-# No código principal
-if uploaded_file is not None:
-    with open("temp.kml", "wb") as f:
-        f.write(uploaded_file.getbuffer())
-    
-    if validar_kml("temp.kml"):
-        st.write("Processando o arquivo KML...")
-        distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros = processar_kml("temp.kml")
-    else:
-        st.stop()  # Interrompe a execução se o arquivo for inválido
+
 
 # Função para calcular a distância total de uma LineString em metros
 def calcular_distancia_linestring(coordinates):
@@ -588,9 +579,16 @@ uploaded_file = st.file_uploader("Carregue um arquivo KML", type=["kml"])
 
 # Verifica se um arquivo foi carregado
 if uploaded_file is not None:
-    # Salva o arquivo temporariamente
+
+       # Salva o arquivo temporariamente
     with open("temp.kml", "wb") as f:
         f.write(uploaded_file.getbuffer())
+
+        if validar_kml("temp.kml"):
+        st.write("Processando o arquivo KML...")
+        distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros = processar_kml("temp.kml")
+    else:
+        st.stop()  # Interrompe a execução se o arquivo for inválido
     
     # Processa o arquivo KML
     st.write("Processando o arquivo KML...")
