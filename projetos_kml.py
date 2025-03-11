@@ -46,6 +46,13 @@ def extrair_estilos(root):
 
 
 def processar_folder_link(folder, estilos):
+    # Verifica se a pasta está dentro de uma pasta "GPON"
+    parent = folder.getparent()
+    while parent is not None:
+        if hasattr(parent, 'name') and "GPON" in parent.name.text.upper():
+            return 0.0, [], [], [], [], False  # Retorna valores vazios se estiver dentro de uma pasta GPON
+        parent = parent.getparent()
+    
     distancia_folder = 0.0
     dados = []
     coordenadas_folder = []
