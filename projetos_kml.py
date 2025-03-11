@@ -589,11 +589,7 @@ if uploaded_file is not None:
         distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros = processar_kml("temp.kml")
     else:
         st.stop()  # Interrompe a execução se o arquivo for inválido
-    
-    # Processa o arquivo KML
-    st.write("Processando o arquivo KML...")
-    distancia_total, dados_por_pasta, coordenadas_por_pasta, cidades_coords, dados_gpon, dados_em_andamento, dados_concluido, dados_link_parceiros = processar_kml("temp.kml")
-    
+      
     # Exibe o mapa e outras informações
     st.subheader("Mapa do Link entre Cidades")
     
